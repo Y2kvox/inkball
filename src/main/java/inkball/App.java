@@ -104,17 +104,21 @@ public class App extends PApplet {
      * Draw all elements in the game by current frame.
      */
 
-    public void ballCheck(){
-        Ball ball = (Ball) board.grid[board.ballx][board.bally].getContent();
-        ball.move();
-        ball.bounceOffBoundary(board);  // Bounce off walls if necessary
-        ball.draw(this, board.bally, board.ballx);  // Draw ball at new position
+    public void ballCheck() {
+        for (int y = 0; y < BOARD_HEIGHT; y++) {
+            for (int x = 0; x < BOARD_WIDTH; x++) {
+                Tile tile = board.grid[y][x];
+                if (tile.hasContent() && tile.getContent() instanceof Ball) {
+                    Ball ball = (Ball) tile.getContent();
+                    ball.move(); // Move the ball
+                    ball.bounceOffBoundary(board); // Check for boundary collisions
+                    ball.draw(this, x, y); // Draw ball at its new position
+                }
+            }
+        }
     }
 	@Override
     public void draw() {
-
-        
-        
         //----------------------------------
         //display Board for current level:
         background(225);
