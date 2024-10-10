@@ -41,8 +41,8 @@ public class App extends PApplet {
     Board board; // Add board instance
 
     //time
-    private int timerDuration; // Total time in seconds
-    private int timeRemaining; // Time remaining in seconds
+    private int timerDuration;
+    private int timeRemaining;
     private boolean timerRunning; // Timer state
     private int lastMillis;
 
@@ -60,13 +60,14 @@ public class App extends PApplet {
     public void setup() {
         frameRate(FPS);
         loadSprites();
-        timerDuration = 60; // Set your timer duration (e.g., 60 seconds)
-        timeRemaining = timerDuration -1; // Initialize time remaining
-        timerRunning = true; // Start the timer
-        lastMillis = millis();
 
         board = new Board(BOARD_WIDTH, BOARD_HEIGHT); // Initialize the board
         board.loadLevelFromJson(configPath);
+        
+        timerDuration = board.getTimeForApp(); // duration
+        timeRemaining = timerDuration -1; // countdown
+        timerRunning = true;
+        lastMillis = millis();
     }
 
 	@Override
@@ -98,10 +99,6 @@ public class App extends PApplet {
 		
     }
 
-    // public void loadLevel(int levelIndex) {
-    //     JSONObject config = loadJSONObject(configPath);  // Load the JSON config file
-    //     currentLevel = new Level(this, config.getJSONArray("levels").getJSONObject(levelIndex));
-    // }
 
     /**
      * Draw all elements in the game by current frame.
@@ -139,13 +136,14 @@ public class App extends PApplet {
             // Check if the timer has reached zero
             if (timeRemaining <= 0) {
                 timerRunning = false; // Stop the timer
-                timeRemaining = 0; // Ensure it doesn't go negative
+                timeRemaining = 0;
                 // You can also trigger an event here when the timer ends
             }
         }
         fill(0);
-        textSize(25);
-        text("Timer: "+ timeRemaining, 0, 50);
+        textSize(20);
+        text("Timer: "+ timeRemaining, 450, 25);
+        text("Score: "+ 0, 450, 50);
         
 		//----------------------------------
         //----------------------------------

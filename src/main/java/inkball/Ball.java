@@ -7,7 +7,7 @@ public class Ball implements TileContent {
     int colorIndex;
     int velocityX;
     int velocityY;
-    float posX, posY;
+    float posX, posY, scoreIncrease, scoreDecrease;
 
     public Ball(int colorIndex, int startX, int startY) {
         if (colorIndex >= 0 && colorIndex < App.ballsprite.length) {
@@ -16,6 +16,18 @@ public class Ball implements TileContent {
             System.out.println("Invalid ball: " + colorIndex);
         }
         this.colorIndex = colorIndex;
+
+        //set score
+        if(this.colorIndex == 0){
+            this.scoreIncrease = 70;
+            this.scoreDecrease = 0;
+        }else if( this.colorIndex == 1 || this.colorIndex == 2 || this.colorIndex == 3){
+            this.colorIndex = 50;
+            this.scoreDecrease = 25;
+        }else if(this.colorIndex == 4){
+            this.scoreIncrease = 100;
+            this.scoreDecrease = 100;
+        }
 
         // Initialize ball position
         this.posX = startX * App.CELLSIZE;
@@ -99,5 +111,13 @@ public class Ball implements TileContent {
     public void bounceOffWall() {
         velocityX *= -1;
         velocityY *= -1;
+    }
+
+    public float increaseScore(){
+        return this.scoreIncrease;
+    }
+
+    public float decreaseScore(){
+        return this.scoreDecrease;
     }
 }

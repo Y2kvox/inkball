@@ -2,6 +2,7 @@ package inkball;
 
 import java.io.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import processing.core.*;
 
 import java.util.List;
 import java.util.Map;
@@ -14,6 +15,8 @@ public class Board {
     int row;
     int col;
     int ballx, bally;
+    int currentLevelIndex; // Track the current level index
+    List<Map<String, Object>> levels;
 
 
 
@@ -26,6 +29,17 @@ public class Board {
                 grid[i][j] = new Tile();
             }
         }
+        this.currentLevelIndex = 0;
+    }
+
+    private void placeWall(int x, int y, int wallType) {
+        if (!grid[y][x].getSafe()) {
+            Wall wall = new Wall(wallType);
+            setWallType(wall, wallType);
+            placeItem(x, y, wall);
+        } else {
+            placeItem(x, y, new TileWithImage());
+        }
     }
 
     public void placeItem(int x, int y, TileContent item) {
@@ -36,7 +50,7 @@ public class Board {
         }
     }
 
-    public void setWallType(Wall wall, int num){
+    public void setWallType(Wall wall, int num) {
         wall.wallType = num;
     }
 
@@ -90,48 +104,17 @@ public class Board {
                             break;
                         
                         
-                        case '1':
-                            if (!grid[y][x].getSafe()) {
-                                Wall wall1 = new Wall(1);
-                                setWallType(wall1, 1);  // Set wall type to 1
-                                placeItem(x, y, wall1);
-                                System.out.println("Placed Wall of type 1 at (" + x + ", " + y + ")");
-                            } else {
-                                placeItem(x, y, new TileWithImage());
-                            }
+                            case '1':
+                            placeWall(x, y, 1);
                             break;
-
                         case '2':
-                            if (!grid[y][x].getSafe()) {
-                                Wall wall2 = new Wall(2);
-                                setWallType(wall2, 2);  // Set wall type to 2
-                                placeItem(x, y, wall2);
-                                System.out.println("Placed Wall of type 2 at (" + x + ", " + y + ")");
-                            } else {
-                                placeItem(x, y, new TileWithImage());
-                            }
+                            placeWall(x, y, 2);
                             break;
-
                         case '3':
-                            if (!grid[y][x].getSafe()) {
-                                Wall wall3 = new Wall(3);
-                                setWallType(wall3, 3);  // Set wall type to 3
-                                placeItem(x, y, wall3);
-                                System.out.println("Placed Wall of type 3 at (" + x + ", " + y + ")");
-                            } else {
-                                placeItem(x, y, new TileWithImage());
-                            }
+                            placeWall(x, y, 3);
                             break;
-
                         case '4':
-                            if (!grid[y][x].getSafe()) {
-                                Wall wall4 = new Wall(4);
-                                setWallType(wall4, 4);  // Set wall type to 4
-                                placeItem(x, y, wall4);
-                                System.out.println("Placed Wall of type 4 at (" + x + ", " + y + ")");
-                            } else {
-                                placeItem(x, y, new TileWithImage());
-                            }
+                            placeWall(x, y, 4);
                             break;
 
                             //spawner
@@ -160,6 +143,9 @@ public class Board {
 
 
     public void draw(App app) {
+
+        app.fill(0);
+        app.rect(0,25,200,180);
         // First, draw the tile backgrounds
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
@@ -175,7 +161,7 @@ public class Board {
             }
         }
     
-        // Now, draw the objects like balls, spawners, and holes on top of the tile backgrounds
+        // draw the objects like balls, spawners, and holes on tile backgrounds
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
                 Tile tile = grid[y][x];
@@ -189,22 +175,72 @@ public class Board {
         }
     }
 
-    public void loadLevelFromJson(String filename){
+    //level file pull
+    @SuppressWarnings("unchecked")
+    public void loadLevelFromJson(String filename) {
         ObjectMapper mapper = new ObjectMapper();
 
-        try{
-            Map<String,Object> jsonData = mapper.readValue(new File(filename), Map.class);
+        try {
+            Map<String, Object> jsonData = mapper.readValue(new File(filename), Map.class);
 
-            if (jsonData.containsKey("levels")){
-                List<Map<String, Object>> levels = (List<Map<String, Object>>) jsonData.get("levels");
-                Map<String, Object> firstLevel = levels.get(0);
-                String layoutFile = (String) firstLevel.get("layout");
-                loadLevel(layoutFile);
+            if (jsonData.containsKey("levels")) {
+                levels = (List<Map<String, Object>>) jsonData.get("levels");
+                loadCurrentLevel(); // Load the current level upon initializing
             }
-        }catch(IOException e){
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
+    // Load the current level based on the currentLevelIndex
+    public void loadCurrentLevel() {
+        if (currentLevelIndex < levels.size()) {
+            Map<String, Object> levelData = levels.get(currentLevelIndex);
+            String layoutFile = (String) levelData.get("layout");
+            loadLevel(layoutFile);
+        } else {
+            System.out.println("No more levels to load.");
+        }
+    }
+
+    // Method to advance to the next level
+    public void loadNextLevel() {
+        currentLevelIndex++;
+        loadCurrentLevel(); // Load the next level
+    }
+
+    //time pull
+    public Integer getTime(){
+        Integer time = 0;
+        if (currentLevelIndex < levels.size()) {
+            Map<String, Object> levelData = levels.get(currentLevelIndex);
+            time = (Integer) levelData.get("time");
+        } else {
+            System.out.println("No time available to load.");
+        }
+
+        return time;
+    }
+
+    public Integer getTimeForApp(){
+        Integer time = getTime();
+        time = (time >= 0) ? time : 0;
+        return time;
+    }
+
+    //interval pull
+    public Integer getInterval(){
+        Integer interval = 0;
+        if (currentLevelIndex < levels.size()) {
+            Map<String, Object> levelData = levels.get(currentLevelIndex);
+            interval = (Integer) levelData.get("spawn_interval");
+        } else {
+            System.out.println("No time available to load.");
+        }
+
+        return interval;
+    }
+
        
     
 }
