@@ -228,14 +228,14 @@ public class Board {
         return time;
     }
 
-    //interval pull
+    // spawn interval pull
     public Integer getInterval(){
         Integer interval = 0;
         if (currentLevelIndex < levels.size()) {
             Map<String, Object> levelData = levels.get(currentLevelIndex);
             interval = (Integer) levelData.get("spawn_interval");
         } else {
-            System.out.println("No time available to load.");
+            System.out.println("No spawn interval available to load.");
         }
 
         return interval;
