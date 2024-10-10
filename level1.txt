@@ -13,6 +13,6 @@ X                X
 X                X
 X     B2         X
 X                X
-X              H0X
+X     B1       H0X
 X                X
 XXXXXXX1111XXXXXXX
