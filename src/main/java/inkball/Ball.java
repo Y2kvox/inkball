@@ -39,19 +39,7 @@ public class Ball implements TileContent {
         this.velocityY = (Math.random() < 0.5) ? -2 : 2;
     }
 
-    @Override
-    public String toString() {
-        return "ball";
-    }
-
-    @Override
-    public void draw(App app, int x, int y) {
-        if (sprite != null) {
-            app.image(sprite, posX, posY);  // Use actual position for drawing
-        } else {
-            App.println("Ball not loading properly");
-        }
-    }
+    
 
     public void move() {
         posX += velocityX;
@@ -77,8 +65,7 @@ public class Ball implements TileContent {
 
                     // Original X-direction check
                     if (posY >= wallY - 0.8 * App.CELLSIZE && posY <= wallY + 0.8 * App.CELLSIZE) {
-                        if ((posX + App.CELLSIZE <= wallX + 0.5 * App.CELLSIZE && posX >= wallX - App.CELLSIZE) ||
-                            (posX >= wallX + App.CELLSIZE - 0.5 * App.CELLSIZE && posX + App.CELLSIZE <= wallX + 2 * App.CELLSIZE)) {
+                        if (Math.abs(posX - wallX) <= App.CELLSIZE) {
                             velocityX *= -1;
                             
                             // Change ball type if it hits a different wall type
@@ -92,8 +79,7 @@ public class Ball implements TileContent {
 
                     // Original Y-direction check
                     if (posX >= wallX - 0.8 * App.CELLSIZE && posX <= wallX + 0.8 * App.CELLSIZE) {
-                        if ((posY + App.CELLSIZE <= wallY + 0.5 * App.CELLSIZE && posY >= wallY - App.CELLSIZE) ||
-                            (posY >= wallY + App.CELLSIZE - 0.5 * App.CELLSIZE && posY + App.CELLSIZE <= wallY + 2 * App.CELLSIZE)) {
+                        if (Math.abs(posY - wallY) <= App.CELLSIZE) {
                             velocityY *= -1;
                             
                             // Change ball type if it hits a different wall type
@@ -122,6 +108,18 @@ public class Ball implements TileContent {
         return this.scoreDecrease;
     }
 
-    
+    @Override
+    public String toString() {
+        return "ball";
+    }
+
+    @Override
+    public void draw(App app, int x, int y) {
+        if (sprite != null) {
+            app.image(sprite, posX, posY);  // Use actual position for drawing
+        } else {
+            App.println("Ball not loading properly");
+        }
+    }
     
 }

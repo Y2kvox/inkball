@@ -20,8 +20,9 @@ public class Spawner implements TileContent {
         coords.add(new int[] {x, y});
     }
 
+    //coords = [[x1,y1], [x2,y2],...[xN,yN]]
     public List<int[]> getCoords() {
-        return coords;  // Return all the coordinates
+        return coords;
     }
     
     @Override

@@ -40,6 +40,7 @@ public class App extends PApplet {
 
     Board board; // Add board instance
     ArrayList<int[]> balls;
+    ArrayList<Ball> currentBalls;
 
     //time
     private int timerDuration;
@@ -74,6 +75,9 @@ public class App extends PApplet {
         timeRemaining = timerDuration -1; // countdown
         timerRunning = true;
         lastMillis = millis();
+        board.addBalls();
+
+
     }
 
 	@Override
@@ -116,15 +120,16 @@ public class App extends PApplet {
      */
 
      public void ballCheck() {
-        ArrayList<Ball> currentBalls = board.getBalls(); // Get the balls from the board
+        currentBalls = board.getBalls();
 
         for (Ball ball : currentBalls) {
-            ball.move(); // Move the ball
-            ball.bounceOffBoundary(board); // Check for boundary collisions
             ball.draw(this, (int) ball.posX, (int) ball.posY);
+            ball.move();
+            ball.bounceOffBoundary(board);
+            
         }
     }
-    
+
 	@Override
     public void draw() {
         //----------------------------------

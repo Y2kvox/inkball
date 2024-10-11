@@ -17,12 +17,12 @@ public class Board {
     boolean lock;
     int row;
     int col;
-    int ballx, bally;
     int currentLevelIndex; // Track the current level index
     List<Map<String, Object>> levels;
-    ArrayList<Ball> balls = new ArrayList<>();
+    ArrayList<Ball> balls;
     List<Spawner> spawners;
-
+    List<int[]> xy;
+    
 
 
     public Board(int width, int height) {
@@ -37,6 +37,7 @@ public class Board {
         this.currentLevelIndex = 0;
         this.balls = new ArrayList<>(); // Initialize the balls list
         this.spawners = new ArrayList<>(); // Initialize the spawners list
+        xy = new ArrayList<>();
     }
     
 
@@ -63,6 +64,7 @@ public class Board {
     }
 
     public void loadLevel(String filename) {
+        xy.clear();
         try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
             String line;
             int y = 0;
@@ -70,7 +72,6 @@ public class Board {
             while ((line = br.readLine()) != null && y < height) {
                 for (int x = 0; x < line.length() && x < width; x++) {
                     char ch = line.charAt(x);
-                    Tile tile = grid[y][x];
 
                     switch (ch) {
                         case 'X':
@@ -83,10 +84,9 @@ public class Board {
                                 char colorChar = line.charAt(x + 1);
                                 int colorIndex = Character.getNumericValue(colorChar);
                                 placeItem(x, y, new TileWithImage());
-                                balls.add(new Ball(colorIndex, x, y));
+                                xy.add(new int[] {colorIndex,x,y});
+                                
                             }
-                            ballx = y;
-                            bally = x;
                             grid[y][x+1].setSafe();
                             break;
                         
@@ -133,7 +133,7 @@ public class Board {
                             spawners.add(spawn);
                             break;
 
-                            // Empty space, no content, but tile will still be drawn
+                            //tile image
                         case ' ':
                             if(!grid[y][x].getSafe()){
                                 placeItem(x, y, new TileWithImage());
@@ -142,9 +142,9 @@ public class Board {
                         default:
                             break;
                     }
-                    System.out.print(grid[y][x].getContent() + ", ");
+                    //System.out.print(grid[y][x].getContent() + ", ");
                 }
-                System.out.println();
+                //System.out.println();
                 y++;
             }
         } catch (IOException e) {
@@ -155,7 +155,6 @@ public class Board {
 
     public void draw(App app) {
 
-        app.fill(0);
         app.rect(0,25,200,180);
         // First, draw the tile backgrounds
         for (int y = 0; y < height; y++) {
@@ -166,8 +165,6 @@ public class Board {
                     if (tile.getContent() instanceof TileWithImage) {
                         tile.getContent().draw(app, x, y);
                     }
-                } else {
-                    // You can also handle cases for default tile backgrounds here
                 }
             }
         }
@@ -186,7 +183,7 @@ public class Board {
         }
     }
 
-    //get all spawners coords in a 2d list --> allcords = [[x1,y1], [x2,y2],...,[xN,yN]]
+    //spawners coords in a 2d list --> allcords = [[x1,y1], [x2,y2],...,[xN,yN]]
     public List<int[]> getAllSpawnerCoords() {
         List<int[]> allCoords = new ArrayList<>();
         for (Spawner spawner : spawners) {
@@ -262,31 +259,44 @@ public class Board {
         return interval;
     }
 
-    //ball list
-    public void addBalls(){
-        int[] s;
-        List<int[]> coords = getAllSpawnerCoords();
-        Random random = new Random();
-        if (coords.isEmpty()){
-            throw new IllegalStateException("No coordinates available.");
-        }else{
-            int index = random.nextInt(coords.size());
-            s =  coords.get(index);
-        }
+    // Ball list
+    public void addBalls() {
         if (currentLevelIndex < levels.size()) {
             Map<String, Object> levelData = levels.get(currentLevelIndex);
             List<String> colors = (List<String>) levelData.get("balls");
-
-            for(String str: colors){
+            for (String str : colors) {
                 Integer n = getColorCode(str);
-                System.out.print("Ball"+n+", ");
-                balls.add(new Ball(n, s[0],s[1]));
+                int[] s = getRandomSpawnerCoords();
+                
+                if (s != null) {
+                    System.out.print("Ball" + n + ", ");
+                    balls.add(new Ball(n, s[0], s[1]));
+                    System.out.println(s[0] + ", " + s[1]);
+                }
             }
-            System.out.print("Currently in the array");
+
+            // Add balls based on xy
+            for (int[] num : xy) {
+                balls.add(new Ball(num[0], num[1], num[2]));
+                System.out.print("Ball" + num[0] + ", ");
+                System.out.println(num[1] + ", " + num[2]);
+            }
         } else {
             System.out.println("No balls available to load.");
         }
     }
+
+    //coords = [[x1,y1], [x2,y2],...[xN,yN]] --> returns [xM,yM]
+    private int[] getRandomSpawnerCoords() {
+        List<int[]> coords = getAllSpawnerCoords();
+        if (coords.isEmpty()) {
+            return null; // Return null if no coordinates are available
+        }
+        Random random = new Random();
+        int index = random.nextInt(coords.size());
+        return coords.get(index); // Return the randomly selected coordinates
+    }
+
 
     //color convertor
     public Integer getColorCode(String str) {
@@ -305,6 +315,7 @@ public class Board {
     }
 
     public void resetBalls() {
+        lock = true;
         balls.clear();
         addBalls();
     }
