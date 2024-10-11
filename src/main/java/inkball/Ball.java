@@ -1,6 +1,7 @@
 package inkball;
 
 import processing.core.PImage;
+import processing.core.*;
 
 public class Ball implements TileContent {
     PImage sprite;
@@ -71,13 +72,13 @@ public class Ball implements TileContent {
                 Tile tile = board.grid[y][x];
                 if (tile.hasContent() && tile.getContent() instanceof Wall) {
                     Wall wall = (Wall) tile.getContent();
-                    float drawX = x * App.CELLSIZE;
-                    float drawY = y * App.CELLSIZE + App.TOPBAR;
+                    float wallX = wall.getX();
+                    float wallY = wall.getY();
 
                     // Original X-direction check
-                    if (posY >= drawY - 0.8 * App.CELLSIZE && posY <= drawY + 0.8 * App.CELLSIZE) {
-                        if ((posX + App.CELLSIZE <= drawX + 0.5 * App.CELLSIZE && posX >= drawX - App.CELLSIZE) ||
-                            (posX >= drawX + App.CELLSIZE - 0.5 * App.CELLSIZE && posX + App.CELLSIZE <= drawX + 2 * App.CELLSIZE)) {
+                    if (posY >= wallY - 0.8 * App.CELLSIZE && posY <= wallY + 0.8 * App.CELLSIZE) {
+                        if ((posX + App.CELLSIZE <= wallX + 0.5 * App.CELLSIZE && posX >= wallX - App.CELLSIZE) ||
+                            (posX >= wallX + App.CELLSIZE - 0.5 * App.CELLSIZE && posX + App.CELLSIZE <= wallX + 2 * App.CELLSIZE)) {
                             velocityX *= -1;
                             
                             // Change ball type if it hits a different wall type
@@ -90,9 +91,9 @@ public class Ball implements TileContent {
                     }
 
                     // Original Y-direction check
-                    if (posX >= drawX - 0.8 * App.CELLSIZE && posX <= drawX + 0.8 * App.CELLSIZE) {
-                        if ((posY + App.CELLSIZE <= drawY + 0.5 * App.CELLSIZE && posY >= drawY - App.CELLSIZE) ||
-                            (posY >= drawY + App.CELLSIZE - 0.5 * App.CELLSIZE && posY + App.CELLSIZE <= drawY + 2 * App.CELLSIZE)) {
+                    if (posX >= wallX - 0.8 * App.CELLSIZE && posX <= wallX + 0.8 * App.CELLSIZE) {
+                        if ((posY + App.CELLSIZE <= wallY + 0.5 * App.CELLSIZE && posY >= wallY - App.CELLSIZE) ||
+                            (posY >= wallY + App.CELLSIZE - 0.5 * App.CELLSIZE && posY + App.CELLSIZE <= wallY + 2 * App.CELLSIZE)) {
                             velocityY *= -1;
                             
                             // Change ball type if it hits a different wall type
@@ -120,4 +121,7 @@ public class Ball implements TileContent {
     public float decreaseScore(){
         return this.scoreDecrease;
     }
+
+    
+    
 }

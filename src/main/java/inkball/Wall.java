@@ -28,6 +28,14 @@ public class Wall implements TileContent {
         return this.wallType;
     }
 
+    public float getX(){
+        return this.drawX;
+    }
+
+    public float getY(){
+        return this.drawY;
+    }
+
 
     @Override
     public void draw(App app, int x, int y) {

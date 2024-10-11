@@ -4,8 +4,11 @@ import java.io.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import processing.core.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 public class Board {
     int width;
@@ -17,6 +20,8 @@ public class Board {
     int ballx, bally;
     int currentLevelIndex; // Track the current level index
     List<Map<String, Object>> levels;
+    ArrayList<Ball> balls = new ArrayList<>();
+    List<Spawner> spawners;
 
 
 
@@ -26,11 +31,14 @@ public class Board {
         grid = new Tile[height][width];
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                grid[i][j] = new Tile();
+                grid[i][j] = new Tile(); // Ensure each tile is initialized
             }
         }
         this.currentLevelIndex = 0;
+        this.balls = new ArrayList<>(); // Initialize the balls list
+        this.spawners = new ArrayList<>(); // Initialize the spawners list
     }
+    
 
     private void placeWall(int x, int y, int wallType) {
         if (!grid[y][x].getSafe()) {
@@ -62,6 +70,8 @@ public class Board {
             while ((line = br.readLine()) != null && y < height) {
                 for (int x = 0; x < line.length() && x < width; x++) {
                     char ch = line.charAt(x);
+                    Tile tile = grid[y][x];
+
                     switch (ch) {
                         case 'X':
                             placeItem(x, y, new Wall(0));
@@ -72,10 +82,8 @@ public class Board {
                             if (x + 1 < line.length()) {
                                 char colorChar = line.charAt(x + 1);
                                 int colorIndex = Character.getNumericValue(colorChar);
-                                placeItem(x, y, new Ball(colorIndex,x,y));
-                                //placeItem(x+1, y, new TileWithImage());
-                            } else {
-                                placeItem(x, y, new Ball(0,x,y));
+                                placeItem(x, y, new TileWithImage());
+                                balls.add(new Ball(colorIndex, x, y));
                             }
                             ballx = y;
                             bally = x;
@@ -119,7 +127,10 @@ public class Board {
 
                             //spawner
                         case 'S':
-                            placeItem(x, y, new Spawner());
+                            Spawner spawn = new Spawner();
+                            spawn.addCoords(x, y);
+                            placeItem(x, y, spawn);
+                            spawners.add(spawn);
                             break;
 
                             // Empty space, no content, but tile will still be drawn
@@ -174,6 +185,16 @@ public class Board {
             }
         }
     }
+
+    //get all spawners coords in a 2d list --> allcords = [[x1,y1], [x2,y2],...,[xN,yN]]
+    public List<int[]> getAllSpawnerCoords() {
+        List<int[]> allCoords = new ArrayList<>();
+        for (Spawner spawner : spawners) {
+            allCoords.addAll(spawner.getCoords());
+        }
+        return allCoords;
+    }
+    
 
     //level file pull
     @SuppressWarnings("unchecked")
@@ -241,6 +262,55 @@ public class Board {
         return interval;
     }
 
+    //ball list
+    public void addBalls(){
+        int[] s;
+        List<int[]> coords = getAllSpawnerCoords();
+        Random random = new Random();
+        if (coords.isEmpty()){
+            throw new IllegalStateException("No coordinates available.");
+        }else{
+            int index = random.nextInt(coords.size());
+            s =  coords.get(index);
+        }
+        if (currentLevelIndex < levels.size()) {
+            Map<String, Object> levelData = levels.get(currentLevelIndex);
+            List<String> colors = (List<String>) levelData.get("balls");
+
+            for(String str: colors){
+                Integer n = getColorCode(str);
+                System.out.print("Ball"+n+", ");
+                balls.add(new Ball(n, s[0],s[1]));
+            }
+            System.out.print("Currently in the array");
+        } else {
+            System.out.println("No balls available to load.");
+        }
+    }
+
+    //color convertor
+    public Integer getColorCode(String str) {
+    Map<String, Integer> colorMap = new HashMap<>();
+    colorMap.put("blue", 2);
+    colorMap.put("grey", 0);
+    colorMap.put("orange", 1);
+    colorMap.put("green", 3);
+    colorMap.put("yellow", 4);
+
+    return colorMap.get(str);
+    }
+    
+    public ArrayList<Ball> getBalls() {
+        return balls;
+    }
+
+    public void resetBalls() {
+        balls.clear();
+        addBalls();
+    }
+    
+    
+    
        
     
 }

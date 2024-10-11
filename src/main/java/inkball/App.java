@@ -39,12 +39,18 @@ public class App extends PApplet {
     public static PImage tilesprite;
 
     Board board; // Add board instance
+    ArrayList<int[]> balls;
 
     //time
     private int timerDuration;
     private int timeRemaining;
     private boolean timerRunning; // Timer state
     private int lastMillis;
+
+    //drawing in mouse
+    boolean canDraw;
+    int square = 1;
+
 
 
     public App() {
@@ -72,7 +78,9 @@ public class App extends PApplet {
 
 	@Override
     public void keyPressed(KeyEvent event){
-        
+        if (key == 'r' || key == 'R'){
+            resetGame();
+        }
     }
 
 	@Override
@@ -84,18 +92,21 @@ public class App extends PApplet {
     public void mousePressed(MouseEvent e) {
         // create a new player-drawn line object
         System.out.println("Mouse pressed at: " + mouseX + ", " + mouseY);
+        canDraw = true;
     }
 	
 	@Override
     public void mouseDragged(MouseEvent e) {
         // add line segments to player-drawn line object if left mouse button is held
-		
+        
+        
 		// remove player-drawn line object if right mouse button is held 
 		// and mouse position collides with the line
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
+        canDraw = false;
 		
     }
 
@@ -104,32 +115,27 @@ public class App extends PApplet {
      * Draw all elements in the game by current frame.
      */
 
-    public void ballCheck() {
-        for (int y = 0; y < BOARD_HEIGHT; y++) {
-            for (int x = 0; x < BOARD_WIDTH; x++) {
-                Tile tile = board.grid[y][x];
-                if (tile.hasContent() && tile.getContent() instanceof Ball) {
-                    Ball ball = (Ball) tile.getContent();
-                    ball.move(); // Move the ball
-                    ball.bounceOffBoundary(board); // Check for boundary collisions
-                    ball.draw(this, x, y); // Draw ball at its new position
-                }
-            }
+     public void ballCheck() {
+        ArrayList<Ball> currentBalls = board.getBalls(); // Get the balls from the board
+
+        for (Ball ball : currentBalls) {
+            ball.move(); // Move the ball
+            ball.bounceOffBoundary(board); // Check for boundary collisions
+            ball.draw(this, (int) ball.posX, (int) ball.posY);
         }
     }
+    
 	@Override
     public void draw() {
         //----------------------------------
         //display Board for current level:
         background(225);
         // Draw the board
-        board.draw(this); // Draw the board
+        board.draw(this);
         // Move and bounce all balls
         ballCheck();
         
-        //----------------------------------
-        //display score
-        //----------------------------------
+        //if(mousePressed || mouseDragged();
         if (timerRunning) {
             int currentMillis = millis();
             if (currentMillis - lastMillis >= 1000) { // Check if one second has passed
@@ -148,6 +154,26 @@ public class App extends PApplet {
         textSize(20);
         text("Timer: "+ timeRemaining, 450, 25);
         text("Score: "+ 0, 450, 50);
+
+        if(canDraw){
+            int x = mouseX;
+            int y = mouseY;
+            stroke(0);
+            strokeWeight(10);
+
+            //line1
+            line(x, y-(5*square), x, y+(5*square));
+
+            //line2
+            line(x+(square*3), y-(3*square), x-(square*3), y+(3*square));
+
+            //line3
+            line(x-(square*5),y,x+(square*5),y);
+
+            //line4
+            line(x+(square*3),y+(3*square), x-(3*square), y-(3*square));
+        }
+        
         
 		//----------------------------------
         //----------------------------------
@@ -197,6 +223,26 @@ public class App extends PApplet {
         for (int i = 0; i < 5; i++) {
             ballsprite[i] = loadImage("src/main/resources/inkball/ball" + i + ".png");
         }
+    }
+
+
+    
+
+    // Method to reset the game state
+    public void resetGame() {
+        board.loadLevelFromJson(configPath); // Reload the board from the JSON file
+        board.resetBalls();                  // Reset ball positions, velocities, etc.
+        
+        // Reset other game variables
+        timeRemaining = timerDuration - 1;   // Reset the timer
+        timerRunning = true;                 // Restart the timer
+        lastMillis = millis();               // Update the lastMillis to current time
+        
+        // Reset any other game-related variables here
+        canDraw = false;                     // Reset drawing state
+        square = 1;                          // Reset square size or other drawing settings
+        
+        // You may also want to reset the score or other game elements
     }
 
 
