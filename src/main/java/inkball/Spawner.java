@@ -8,7 +8,6 @@ import processing.core.PImage;
 public class Spawner implements TileContent {
     PImage sprite;
     List<int[]> coords = new ArrayList<>();
-
     int x,y;
 
     public Spawner(){

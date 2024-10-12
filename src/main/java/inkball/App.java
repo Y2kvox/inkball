@@ -2,6 +2,7 @@ package inkball;
 
 import processing.core.PApplet;
 import processing.core.PImage;
+import processing.core.PVector;
 import processing.data.JSONArray;
 import processing.data.JSONObject;
 import processing.event.KeyEvent;
@@ -28,7 +29,7 @@ public class App extends PApplet {
 
     public static final int INITIAL_PARACHUTES = 1;
 
-    public static final int FPS = 30;
+    public static final int FPS = 60;
 
     public String configPath;
     //sprites
@@ -50,7 +51,13 @@ public class App extends PApplet {
 
     //drawing in mouse
     boolean canDraw;
-    int square = 1;
+    ArrayList<Line> drawnLines = new ArrayList<>(); // Store all drawn lines
+    PVector lastPoint; // To store the last drawn point
+
+    
+
+    //pause
+    boolean paused;
 
 
 
@@ -84,6 +91,12 @@ public class App extends PApplet {
     public void keyPressed(KeyEvent event){
         if (key == 'r' || key == 'R'){
             resetGame();
+        }else if(key == ' '){
+            if(!paused){
+                paused = true;
+            }else{
+                paused = false;
+            }
         }
     }
 
@@ -96,21 +109,32 @@ public class App extends PApplet {
     public void mousePressed(MouseEvent e) {
         // create a new player-drawn line object
         System.out.println("Mouse pressed at: " + mouseX + ", " + mouseY);
-        canDraw = true;
+        if(!paused && mouseButton == LEFT && timerRunning) canDraw = true;
+
+
     }
 	
-	@Override
+    @Override
     public void mouseDragged(MouseEvent e) {
-        // add line segments to player-drawn line object if left mouse button is held
+        PVector currentPoint = new PVector(mouseX, mouseY);
         
+        if (lastPoint != null && !paused && mouseButton == LEFT && timerRunning) {
+            // Create a new line segment from the last point to the current point
+            drawnLines.add(new Line(lastPoint.copy(), currentPoint.copy())); // Store the line
+            stroke(0); // Set stroke color to black
+            strokeWeight(10); // Set the line thickness
+            line(lastPoint.x, lastPoint.y, currentPoint.x, currentPoint.y);
+        }
         
-		// remove player-drawn line object if right mouse button is held 
-		// and mouse position collides with the line
+        lastPoint = currentPoint; // Update lastPoint to current
     }
+
 
     @Override
     public void mouseReleased(MouseEvent e) {
         canDraw = false;
+        lastPoint = null;
+        System.out.println("Mouse released at: " + mouseX + ", " + mouseY);
 		
     }
 
@@ -124,24 +148,22 @@ public class App extends PApplet {
 
         for (Ball ball : currentBalls) {
             ball.draw(this, (int) ball.posX, (int) ball.posY);
-            ball.move();
-            ball.bounceOffBoundary(board);
+            if(!paused && timerRunning){
+                ball.move();
+                ball.bounceOffBoundary(board);
+            }
+            
             
         }
     }
 
 	@Override
     public void draw() {
-        //----------------------------------
-        //display Board for current level:
         background(225);
-        // Draw the board
         board.draw(this);
-        // Move and bounce all balls
         ballCheck();
         
-        //if(mousePressed || mouseDragged();
-        if (timerRunning) {
+        if (timerRunning && !paused) {
             int currentMillis = millis();
             if (currentMillis - lastMillis >= 1000) { // Check if one second has passed
                 timeRemaining--; // Decrease time remaining by 1 second
@@ -152,31 +174,25 @@ public class App extends PApplet {
             if (timeRemaining <= 0) {
                 timerRunning = false; // Stop the timer
                 timeRemaining = 0;
-                // You can also trigger an event here when the timer ends
             }
         }
         fill(0);
         textSize(20);
-        text("Timer: "+ timeRemaining, 450, 25);
-        text("Score: "+ 0, 450, 50);
+        text("Timer: "+ timeRemaining, 450, TOPBAR/2);
+        text("Score: "+ 0, 450, TOPBAR);
+        stroke(0);
+        strokeWeight(10);
+        if(timeRemaining == 0){
+            gameOver();
+        }
+        if(paused){
+            textSize(20);
+            text(" *** PAUSED ***", 250,TOPBAR);
+        }
 
-        if(canDraw){
-            int x = mouseX;
-            int y = mouseY;
-            stroke(0);
-            strokeWeight(10);
-
-            //line1
-            line(x, y-(5*square), x, y+(5*square));
-
-            //line2
-            line(x+(square*3), y-(3*square), x-(square*3), y+(3*square));
-
-            //line3
-            line(x-(square*5),y,x+(square*5),y);
-
-            //line4
-            line(x+(square*3),y+(3*square), x-(3*square), y-(3*square));
+        
+        for (Line line : drawnLines) {
+            line(line.start.x, line.start.y, line.end.x, line.end.y);
         }
         
         
@@ -235,19 +251,22 @@ public class App extends PApplet {
 
     // Method to reset the game state
     public void resetGame() {
-        board.loadLevelFromJson(configPath); // Reload the board from the JSON file
+        board.loadLevelFromJson(configPath); // Reload board from JSON file
         board.resetBalls();                  // Reset ball positions, velocities, etc.
         
         // Reset other game variables
-        timeRemaining = timerDuration - 1;   // Reset the timer
-        timerRunning = true;                 // Restart the timer
-        lastMillis = millis();               // Update the lastMillis to current time
+        timeRemaining = timerDuration - 1;   // Reset timer
+        timerRunning = true;                 // Restart timer
+        lastMillis = millis();               // Update lastMillis to current time
         
-        // Reset any other game-related variables here
+        // Reset game-related variables
         canDraw = false;                     // Reset drawing state
-        square = 1;                          // Reset square size or other drawing settings
-        
-        // You may also want to reset the score or other game elements
+        // score reset
+    }
+
+    public void gameOver(){
+        textSize(28);
+        text("=== TIME'S UP === ", 150,TOPBAR);
     }
 
 

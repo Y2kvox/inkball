@@ -46,7 +46,7 @@ public class Board {
             Wall wall = new Wall(wallType);
             setWallType(wall, wallType);
             placeItem(x, y, wall);
-        } else {
+        }else {
             placeItem(x, y, new TileWithImage());
         }
     }
@@ -62,6 +62,8 @@ public class Board {
     public void setWallType(Wall wall, int num) {
         wall.wallType = num;
     }
+
+    
 
     public void loadLevel(String filename) {
         xy.clear();
@@ -153,35 +155,7 @@ public class Board {
     }
 
 
-    public void draw(App app) {
-
-        app.rect(0,25,200,180);
-        // First, draw the tile backgrounds
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                Tile tile = grid[y][x];
-                if (tile.hasContent()) {
-                    // Draw the tile image if it has a specific background like wall or tile image
-                    if (tile.getContent() instanceof TileWithImage) {
-                        tile.getContent().draw(app, x, y);
-                    }
-                }
-            }
-        }
     
-        // draw the objects like balls, spawners, and holes on tile backgrounds
-        for (int y = 0; y < height; y++) {
-            for (int x = 0; x < width; x++) {
-                Tile tile = grid[y][x];
-                if (tile.hasContent()) {
-                    // Draw objects that should appear on top (Ball, Hole, Spawner)
-                    if (!(tile.getContent() instanceof TileWithImage)) {
-                        tile.getContent().draw(app, x, y);
-                    }
-                }
-            }
-        }
-    }
 
     //spawners coords in a 2d list --> allcords = [[x1,y1], [x2,y2],...,[xN,yN]]
     public List<int[]> getAllSpawnerCoords() {
@@ -320,7 +294,33 @@ public class Board {
         addBalls();
     }
     
+    public void draw(App app) {
+        // First, draw the tile backgrounds
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Tile tile = grid[y][x];
+                if (tile.hasContent()) {
+                    // Draw the tile image if it has a specific background like wall or tile image
+                    if (tile.getContent() instanceof TileWithImage) {
+                        tile.getContent().draw(app, x, y);
+                    }
+                }
+            }
+        }
     
+        // draw the objects like balls, spawners, and holes on tile backgrounds
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                Tile tile = grid[y][x];
+                if (tile.hasContent()) {
+                    // Draw objects that should appear on top (Ball, Hole, Spawner)
+                    if (!(tile.getContent() instanceof TileWithImage)) {
+                        tile.getContent().draw(app, x, y);
+                    }
+                }
+            }
+        }
+    }
     
        
     
