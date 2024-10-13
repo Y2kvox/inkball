@@ -59,6 +59,9 @@ public class App extends PApplet {
     //pause
     boolean paused;
 
+    //score
+    int score;
+
 
 
     public App() {
@@ -109,7 +112,7 @@ public class App extends PApplet {
     public void mousePressed(MouseEvent e) {
         // create a new player-drawn line object
         System.out.println("Mouse pressed at: " + mouseX + ", " + mouseY);
-        if(!paused && mouseButton == LEFT && timerRunning) canDraw = true;
+        if(mouseButton == LEFT && timerRunning) canDraw = true;
 
 
     }
@@ -118,7 +121,7 @@ public class App extends PApplet {
     public void mouseDragged(MouseEvent e) {
         PVector currentPoint = new PVector(mouseX, mouseY);
         
-        if (lastPoint != null && !paused && mouseButton == LEFT && timerRunning) {
+        if (lastPoint != null && mouseButton == LEFT && timerRunning) {
             // Create a new line segment from the last point to the current point
             drawnLines.add(new Line(lastPoint.copy(), currentPoint.copy())); // Store the line
             stroke(0); // Set stroke color to black
@@ -144,18 +147,30 @@ public class App extends PApplet {
      */
 
      public void ballCheck() {
-        currentBalls = board.getBalls();
-
-        for (Ball ball : currentBalls) {
+        currentBalls = board.getBalls(); // Assuming this returns a copy or a reference that can be safely iterated over
+        score = 0;
+    
+        // Use an Iterator to avoid ConcurrentModificationException
+        Iterator<Ball> iterator = currentBalls.iterator();
+        
+        while (iterator.hasNext()) {
+            Ball ball = iterator.next();
             ball.draw(this, (int) ball.posX, (int) ball.posY);
-            if(!paused && timerRunning){
+            
+            if (!paused && timerRunning) {
                 ball.move();
                 ball.bounceOffBoundary(board);
+                score += ball.getScore();
             }
             
-            
+            // Check if the ball should shrink instead of being removed
+            if (!ball.notSet) {
+                ball.shrink(); // Gradually shrink the ball
+            }
         }
     }
+    
+    
 
 	@Override
     public void draw() {
@@ -179,15 +194,15 @@ public class App extends PApplet {
         fill(0);
         textSize(20);
         text("Timer: "+ timeRemaining, 450, TOPBAR/2);
-        text("Score: "+ 0, 450, TOPBAR);
+        text("Score: "+ score, 450, TOPBAR);
         stroke(0);
         strokeWeight(10);
         if(timeRemaining == 0){
             gameOver();
         }
         if(paused){
-            textSize(20);
-            text(" *** PAUSED ***", 250,TOPBAR);
+            textSize(30);
+            text(" *** PAUSED ***", 150,TOPBAR);
         }
 
         

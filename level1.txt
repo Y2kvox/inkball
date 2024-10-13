@@ -1,7 +1,7 @@
 XXXXXXX2222XXXXXXX
 X              H0X
 X                X
-X         S      X
+X                X
 X                X
 X                X
 X    XX   XH1    X
@@ -13,6 +13,6 @@ X                X
 X                X
 X     B2         X
 X                X
-X          S   H0X
+X              H0X
 X                X
 XXXXXXX1111XXXXXXX

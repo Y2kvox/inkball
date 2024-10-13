@@ -22,6 +22,7 @@ public class Board {
     ArrayList<Ball> balls;
     List<Spawner> spawners;
     List<int[]> xy;
+    List<Hole> holes = new ArrayList<>();
     
 
 
@@ -63,6 +64,14 @@ public class Board {
         wall.wallType = num;
     }
 
+    public void addHole(Hole h){
+        holes.add(h);
+    }
+
+    public List<Hole> getHoleList(){
+        return holes;
+    }
+
     
 
     public void loadLevel(String filename) {
@@ -96,21 +105,31 @@ public class Board {
                             if (x + 1 < line.length() && y + 1 < height) {
                                 char holeChar = line.charAt(x + 1);
                                 int holeIndex = Character.getNumericValue(holeChar);
-                                placeItem(x, y, new Hole(holeIndex));
+                                Hole hole = new Hole(holeIndex);
+                                placeItem(x, y, hole);
+                                hole.setX(x);
+                                hole.setY(y);
+                                addHole(hole);
+                                System.out.println("Hole coords: "+hole.getX()+", "+ hole.getY());
                                 
                             } else {
                                 placeItem(x, y, new Hole(0));
                             }
-                            //setsafe
-                            grid[y][x].setSafe();  // Mark current tile as safe
-                            grid[y][x+1].setSafe();
-                            grid[y+1][x+1].setSafe();
-                            grid[y+1][x].setSafe();
-                            //holepart
-                            grid[y][x].setPart();
-                            grid[y][x+1].setPart();
-                            grid[y+1][x+1].setPart();
-                            grid[y+1][x].setPart();
+                            // Define the offsets for the tiles to be marked as safe and part of the hole
+                            int[][] offsets = {
+                                {0, 0}, {0, 1},
+                                {1, 0}, {1, 1}
+                            };
+
+                            // Iterate through each offset and apply the methods
+                            for (int[] offset : offsets) {
+                                int offsetY = offset[0];
+                                int offsetX = offset[1];
+
+                                grid[y + offsetY][x + offsetX].setSafe(); // Mark tile as safe
+                                grid[y + offsetY][x + offsetX].setPart(); // Mark tile as part of the hole
+                            }
+
                             break;
                         
                         
@@ -167,7 +186,7 @@ public class Board {
     }
     
 
-    //level file pull
+    //config file pull level array
     @SuppressWarnings("unchecked")
     public void loadLevelFromJson(String filename) {
         ObjectMapper mapper = new ObjectMapper();
@@ -184,18 +203,20 @@ public class Board {
         }
     }
 
-    // Load the current level based on the currentLevelIndex
+
+    //level from json
     public void loadCurrentLevel() {
         if (currentLevelIndex < levels.size()) {
             Map<String, Object> levelData = levels.get(currentLevelIndex);
             String layoutFile = (String) levelData.get("layout");
             loadLevel(layoutFile);
+            Ball.setLevel(layoutFile);
         } else {
             System.out.println("No more levels to load.");
         }
     }
 
-    // Method to advance to the next level
+    //advance to the next level
     public void loadNextLevel() {
         currentLevelIndex++;
         loadCurrentLevel(); // Load the next level

@@ -1,6 +1,9 @@
 package inkball;
 
 import processing.core.PImage;
+
+import org.checkerframework.checker.units.qual.min;
+
 import processing.core.*;
 
 public class Ball implements TileContent {
@@ -8,7 +11,17 @@ public class Ball implements TileContent {
     int colorIndex;
     int velocityX;
     int velocityY;
-    float posX, posY, scoreIncrease, scoreDecrease;
+    float posX, posY;
+    int scoreIncrease, scoreDecrease;
+    int ballScore = 0;
+    static String level;
+    float plusMod;
+    float minusMod;
+    boolean hit;
+    boolean notSet = true;
+    float size; // Current size of the ball
+    static final float SHRINK_RATE = 0.5f; // Amount to shrink each frame
+    static final float MIN_SIZE = 5.0f; // Minimum size to shrink to
 
     public Ball(int colorIndex, int startX, int startY) {
         if (colorIndex >= 0 && colorIndex < App.ballsprite.length) {
@@ -17,17 +30,22 @@ public class Ball implements TileContent {
             System.out.println("Invalid ball: " + colorIndex);
         }
         this.colorIndex = colorIndex;
+        this.size = 25;
 
-        //set score
-        if(this.colorIndex == 0){
-            this.scoreIncrease = 70;
-            this.scoreDecrease = 0;
-        }else if( this.colorIndex == 1 || this.colorIndex == 2 || this.colorIndex == 3){
-            this.colorIndex = 50;
-            this.scoreDecrease = 25;
-        }else if(this.colorIndex == 4){
-            this.scoreIncrease = 100;
-            this.scoreDecrease = 100;
+        //Set score
+        switch (this.colorIndex) {
+            case 0:
+                this.scoreIncrease = 70;
+                this.scoreDecrease = 0;
+                break;
+            case 1: case 2: case 3:
+                this.scoreIncrease = 50;
+                this.scoreDecrease = 25;
+                break;
+            case 4:
+                this.scoreIncrease = 100;
+                this.scoreDecrease = 100;
+                break;
         }
 
         // Initialize ball position
@@ -91,21 +109,83 @@ public class Ball implements TileContent {
                         }
                     }
                 }
+
+                if (tile.hasContent() && tile.getContent() instanceof Hole) {
+                    Hole hole = (Hole) tile.getContent();
+                    
+                    // Check if the ball's position is in the hole's pixel positions
+                    if (hole.checkCollision(this)) { // Assuming 'this' is the ball instance
+                        this.hit = true;
+                        scorePlus();
+                        this.notSet = false;
+                    }
+                }
+                 
             }
         }
     }
 
-    public void bounceOffWall() {
-        velocityX *= -1;
-        velocityY *= -1;
+    public boolean scorePlus() {
+        // Only increase the score if certain conditions are met
+        if (hit && notSet) {
+            ballScore += increaseScore();
+            return true;
+        }
+        return false;
+    }
+    
+
+    public void scoreMinus() {
+        ballScore -= decreaseScore();
+    }
+
+    public float getScore(){
+        return ballScore;
     }
 
     public float increaseScore(){
-        return this.scoreIncrease;
+        changeMods();
+        return this.scoreIncrease * plusMod;
     }
 
     public float decreaseScore(){
-        return this.scoreDecrease;
+        changeMods();
+        return this.scoreDecrease * minusMod;
+    }
+
+    public static void setLevel(String str){
+        level = str;
+        
+    }
+
+    public void changeMods(){
+        switch (level) {
+            case "level1.txt":
+                plusMod = 1f;
+                minusMod = 1f;
+                break;
+            case "level2.txt":
+                plusMod = 1.2f;
+                minusMod = 1.2f;
+                break;
+            case "level3.txt":
+                plusMod = 1.3f;
+                minusMod = 1.3f;
+                break;
+                
+            default:
+                break;
+        }
+    }
+
+    public void shrink() {
+        if (size >= 0) {
+            size -= SHRINK_RATE; // Decrease size
+        }
+    }
+
+    public float getSize() {
+        return size; // Method to return current size
     }
 
     @Override
@@ -115,8 +195,9 @@ public class Ball implements TileContent {
 
     @Override
     public void draw(App app, int x, int y) {
+        if(this.colorIndex == 2) System.out.println(this.size);
         if (sprite != null) {
-            app.image(sprite, posX, posY);  // Use actual position for drawing
+            app.image(sprite, posX, posY,size,size);
         } else {
             App.println("Ball not loading properly");
         }
