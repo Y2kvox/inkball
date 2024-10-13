@@ -3,7 +3,6 @@ package inkball;
 public class Tile{
     private TileContent content;
     boolean safe;
-    boolean holepart;
 
     public Tile() {
         this.content = null;
@@ -40,15 +39,6 @@ public class Tile{
     public boolean getSafe(){
         return this.safe;
     }
-
-    public void setPart(){
-        this.holepart = true;
-    }
-
-    public boolean getPart(){
-        return this.holepart;
-    }
-    
 
    
 }
