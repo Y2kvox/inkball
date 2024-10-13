@@ -115,21 +115,6 @@ public class Board {
                             } else {
                                 placeItem(x, y, new Hole(0));
                             }
-                            // Define the offsets for the tiles to be marked as safe and part of the hole
-                            int[][] offsets = {
-                                {0, 0}, {0, 1},
-                                {1, 0}, {1, 1}
-                            };
-
-                            // Iterate through each offset and apply the methods
-                            for (int[] offset : offsets) {
-                                int offsetY = offset[0];
-                                int offsetX = offset[1];
-
-                                grid[y + offsetY][x + offsetX].setSafe(); // Mark tile as safe
-                                grid[y + offsetY][x + offsetX].setPart(); // Mark tile as part of the hole
-                            }
-
                             break;
                         
                         
