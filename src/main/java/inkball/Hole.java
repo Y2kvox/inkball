@@ -15,13 +15,14 @@ public class Hole implements TileContent {
     List<PVector> pixelPositions; // List to store pixel positions of the hole
 
     public Hole(int holeIndex) {
+        this.holeIndex = holeIndex;
         if (holeIndex >= 0) {
             this.sprite = App.holesprite[holeIndex];
         } else {
             System.out.println("Invalid hole: " + holeIndex);
         }
 
-        this.holeIndex = holeIndex;
+        
         this.pixelPositions = new ArrayList<>(); // Initialize the pixel positions list
     }
 
@@ -85,7 +86,7 @@ public class Hole implements TileContent {
     // Method to check if a ball touches any pixel of the hole
     public boolean checkCollision(Ball ball) {
         for (PVector pixel : pixelPositions) {
-            if (PVector.dist(new PVector(ball.posX, ball.posY), pixel) < 32) {
+            if (PVector.dist(new PVector(ball.posX, ball.posY), pixel) < 1) {
                 return true; // Collision detected
             }
         }

@@ -250,7 +250,7 @@ public class Board {
             System.out.println("No spawn interval available to load.");
         }
 
-        return interval;
+        return interval* 1000;
     }
 
     // Ball list
