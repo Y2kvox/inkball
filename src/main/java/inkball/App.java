@@ -56,7 +56,7 @@ public class App extends PApplet {
 
     //spawn rate
     int ballReleaseInterval;
-    long lastBallReleaseTime = 0;
+    long lastBallReleaseTime;
     int ballsReleased;
 
     //pause
@@ -78,36 +78,41 @@ public class App extends PApplet {
 
 	@Override
     public void setup() {
-        frameRate(FPS);                // Set the frame rate
-        loadSprites();                 // Load game sprites
+        frameRate(FPS);
+        loadSprites();
 
-        board = new Board(BOARD_WIDTH, BOARD_HEIGHT);  // Initialize the board
-        board.loadLevelFromJson(configPath);           // Load the level configuration
+        //set-reset board
+        board = new Board(BOARD_WIDTH, BOARD_HEIGHT); // Initialize the board
+        board.loadLevelFromJson(configPath);
         
-        timerDuration = board.getTimeForApp();   // Get timer duration from the board
-        timeRemaining = timerDuration - 1;       // Set countdown
-        timerRunning = true;                     // Start the timer
-        lastMillis = millis();                   // Set the last millis for time tracking
+        //set-reset time logic
+        timerDuration = board.getTimeForApp(); // duration
+        timeRemaining = timerDuration -1; // countdown
+        timerRunning = true;
+        lastMillis = millis();
 
-        board.addBalls();                        // Add balls to the board
-        currentBalls = board.getBalls();         // Get the current balls in play
+        //set-reset balls
+        board.addBalls();
+        currentBalls = board.getBalls();
+        ballReleaseInterval = board.getInterval();
 
-        score = 0;                               // Initialize/reset the score
-        ballReleaseInterval = board.getInterval(); // Get the ball release interval
-        ballsReleased = 1;                       // Reset released ball count
-        lastBallReleaseTime = System.currentTimeMillis();  // Reset the ball release timer
+    
+        canDraw = false;                     // Set-Reset drawing state
+        score = 0;                           // Set-Reset score
+    
+        // Set-Reset ball spawning logic
+        ballsReleased = 1;                   // Set-Reset released ball count
+        lastBallReleaseTime = System.currentTimeMillis(); // Reset the ball release timer
 
-        canDraw = false;                         // Reset the drawing state
-        paused = false;                          // Ensure the game is not paused
+
     }
-
 
     @Override
     public void keyPressed(KeyEvent event) {
         if (key == 'r' || key == 'R') {
             resetGame();
         } else if (key == ' ') {
-            paused = !paused; // switch paused state
+            paused = !paused; // Toggle paused state
             
             // If the game is paused, stop the ball release timer
             if (paused) {
@@ -151,7 +156,8 @@ public class App extends PApplet {
     @Override
     public void mouseReleased(MouseEvent e) {
         canDraw = false;
-        lastPoint = null;		
+        lastPoint = null;
+		
     }
 
 
@@ -159,9 +165,10 @@ public class App extends PApplet {
     
     
     public void ballCheck() {
+        score = 0;
         long currentTime = System.currentTimeMillis();
         
-        // Release a new ball every 2 seconds, but only if not paused
+        // Release a new ball every [interval] seconds, if not paused
         if (!paused && ballsReleased < currentBalls.size() && currentTime - lastBallReleaseTime >= ballReleaseInterval) {
             lastBallReleaseTime = currentTime;
             ballsReleased++; // Increase the count of released balls
@@ -174,10 +181,10 @@ public class App extends PApplet {
             
             if (!paused && timerRunning) {
                 ball.move();
-                ball.bounceOffBoundary(board);
+                ball.bounceOffBoundary(board);score += ball.getScore();
             }
             
-            score += ball.getScore();
+            
             
             // Check if the ball should shrink instead of being removed
             if (!ball.notSet) {
@@ -284,7 +291,7 @@ public class App extends PApplet {
 
     public void resetGame() {
         setup();
-        // board.loadLevelFromJson(configPath); // Reload board from JSON file
+        //board.loadLevelFromJson(configPath); // Reload board from JSON file
         // board.resetBalls();                  // Reset ball positions, velocities, etc.
     
         // // Reset other game variables
@@ -296,7 +303,7 @@ public class App extends PApplet {
         // score = 0;                           // Reset score
     
         // // Reset ball spawning logic
-        // ballsReleased = 1;                   // Reset released ball count
+        // ballsReleased = 0;                   // Reset released ball count
         // lastBallReleaseTime = System.currentTimeMillis(); // Reset the ball release timer
     }
 
