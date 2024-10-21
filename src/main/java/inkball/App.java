@@ -29,7 +29,7 @@ public class App extends PApplet {
 
     public static final int INITIAL_PARACHUTES = 1;
 
-    public static final int FPS = 60;
+    public static final int FPS = 120;
 
     public String configPath;
     //sprites
@@ -63,7 +63,8 @@ public class App extends PApplet {
     boolean paused;
 
     //score
-    int score;
+    int score = 0, currentLevelIndex = 0;
+    boolean tr, one, nPressed;
 
 
 
@@ -82,7 +83,7 @@ public class App extends PApplet {
         loadSprites();
 
         //set-reset board
-        board = new Board(BOARD_WIDTH, BOARD_HEIGHT); // Initialize the board
+        board = new Board(BOARD_WIDTH, BOARD_HEIGHT, currentLevelIndex); // Initialize the board
         board.loadLevelFromJson(configPath);
         
         //set-reset time logic
@@ -98,7 +99,6 @@ public class App extends PApplet {
 
     
         canDraw = false;                     // Set-Reset drawing state
-        score = 0;                           // Set-Reset score
     
         // Set-Reset ball spawning logic
         ballsReleased = 1;                   // Set-Reset released ball count
@@ -121,6 +121,9 @@ public class App extends PApplet {
                 // On resume, adjust the ball release timing
                 lastBallReleaseTime = System.currentTimeMillis() - (ballReleaseInterval - (System.currentTimeMillis() - lastBallReleaseTime));
             }
+        }else if(key == 'n' || key == 'N'){
+            goToNextlevel();
+            setup();
         }
     }
 
@@ -165,33 +168,63 @@ public class App extends PApplet {
     
     
     public void ballCheck() {
-        score = 0;
+        /*
+          Resets the score for the current check and manages the release of new balls based on the interval.
+          Draws each released ball, updates its movement, checks for collisions, and handles interactions with holes.
+        */
+    
+        score = 0;  // Reset score for this check
         long currentTime = System.currentTimeMillis();
-        
+    
         // Release a new ball every [interval] seconds, if not paused
         if (!paused && ballsReleased < currentBalls.size() && currentTime - lastBallReleaseTime >= ballReleaseInterval) {
             lastBallReleaseTime = currentTime;
             ballsReleased++; // Increase the count of released balls
         }
-        
+    
         // Iterate only over released balls
         for (int i = 0; i < ballsReleased; i++) {
             Ball ball = currentBalls.get(i);
-            ball.draw(this, (int) ball.posX, (int) ball.posY);
-            
+            stroke(255,0,0);
+            strokeWeight(5);
+            ball.draw(this, (int) ball.position.x, (int) ball.position.y);  // Draw the ball
+            //point(ball.position.x, ball.position.y);
+    
+            // Update ball movement and check for collisions if the game is not paused
             if (!paused && timerRunning) {
                 ball.move();
-                ball.bounceOffBoundary(board);score += ball.getScore();
+                score += ball.getScore();  // Update total score
             }
-            
-            
-            
+    
+            // Check for collisions with walls
+            for (int y = 0; y < board.height; y++) {
+                for (int x = 0; x < board.width; x++) {
+                    Tile tile = board.grid[y][x];
+                    if (tile.hasContent() && tile.getContent() instanceof Wall) {
+                        Wall wall = (Wall) tile.getContent();
+                        ball.handleCollision(wall);
+                    }
+                }
+            }
+    
             // Check if the ball should shrink instead of being removed
-            if (!ball.notSet) {
-                ball.shrink();
+            if (ball.notSet && ball.getSize() >= 0) {
+                for (Hole hole : board.holes) {
+                    PVector holeCenter = hole.getHoleCenter();  // Get the center of the hole
+                    // Check if the ball is colliding with the hole
+                    if (hole.checkCollision(ball)) {
+                        ball.shrink(holeCenter);  // Pass the hole center to the shrink method
+                        break;  // Exit the loop if the ball has interacted with a hole
+                    }
+                }
             }
         }
     }
+    
+    
+    
+    
+    
      
     
     
@@ -229,7 +262,6 @@ public class App extends PApplet {
             textSize(30);
             text(" *** PAUSED ***", 150,TOPBAR);
         }
-
         
         for (Line line : drawnLines) {
             line(line.start.x, line.start.y, line.end.x, line.end.y);
@@ -291,6 +323,8 @@ public class App extends PApplet {
 
     public void resetGame() {
         setup();
+        score = 0; // necessary for reset logic and setup logic being responsible for levelup
+        
         //board.loadLevelFromJson(configPath); // Reload board from JSON file
         // board.resetBalls();                  // Reset ball positions, velocities, etc.
     
@@ -300,11 +334,15 @@ public class App extends PApplet {
         // lastMillis = millis();               // Update lastMillis to current time
     
         // canDraw = false;                     // Reset drawing state
-        // score = 0;                           // Reset score
     
         // // Reset ball spawning logic
         // ballsReleased = 0;                   // Reset released ball count
         // lastBallReleaseTime = System.currentTimeMillis(); // Reset the ball release timer
+
+    }
+
+    public void goToNextlevel(){
+        currentLevelIndex++;
     }
 
     public void gameOver(){

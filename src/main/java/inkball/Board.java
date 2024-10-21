@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+
+
 public class Board {
     int width;
     int height;
@@ -24,9 +26,11 @@ public class Board {
     List<int[]> xy;
     List<Hole> holes = new ArrayList<>();
     
+    
 
 
-    public Board(int width, int height) {
+    public Board(int width, int height, int currentLevelIndex) {
+        this.currentLevelIndex = currentLevelIndex;
         this.width = width;
         this.height = height;
         grid = new Tile[height][width];
@@ -35,7 +39,6 @@ public class Board {
                 grid[i][j] = new Tile(); // Ensure each tile is initialized
             }
         }
-        this.currentLevelIndex = 0;
         this.balls = new ArrayList<>(); // Initialize the balls list
         this.spawners = new ArrayList<>(); // Initialize the spawners list
         xy = new ArrayList<>();
@@ -99,6 +102,7 @@ public class Board {
                                 
                             }
                             grid[y][x+1].setSafe();
+                            placeWall(x+1, y, 0); // ensures that the next tile has a tile image, walltype doesn't matter in this case
                             break;
                         
                         case 'H':
@@ -110,7 +114,7 @@ public class Board {
                                 hole.setX(x);
                                 hole.setY(y);
                                 addHole(hole);
-                                System.out.println("Hole coords: "+hole.getX()+", "+ hole.getY());
+                                //System.out.println("Hole coords: "+hole.getX()+", "+ hole.getY());
                                 
                             } else {
                                 placeItem(x, y, new Hole(0));
@@ -132,7 +136,7 @@ public class Board {
                             break;
                         
                         
-                            case '1':
+                        case '1':
                             placeWall(x, y, 1);
                             break;
                         case '2':
@@ -162,9 +166,9 @@ public class Board {
                         default:
                             break;
                     }
-                    //System.out.print(grid[y][x].getContent() + ", ");
+                    System.out.print(grid[y][x].getContent() + ", ");
                 }
-                //System.out.println();
+                System.out.println();
                 y++;
             }
         } catch (IOException e) {
@@ -205,11 +209,12 @@ public class Board {
 
     //level from json
     public void loadCurrentLevel() {
-        if (currentLevelIndex < levels.size()) {
+        if (this.currentLevelIndex < levels.size()) {
             Map<String, Object> levelData = levels.get(currentLevelIndex);
             String layoutFile = (String) levelData.get("layout");
             loadLevel(layoutFile);
             Ball.setLevel(layoutFile);
+            System.out.println("file name of config level arrayindex: "+currentLevelIndex+" is "+layoutFile);
         } else {
             System.out.println("No more levels to load.");
         }
@@ -256,6 +261,14 @@ public class Board {
     // Ball list
     public void addBalls() {
         if (currentLevelIndex < levels.size()) {
+            
+            // Add balls based on xy
+            for (int[] num : xy) {
+                balls.add(new Ball(num[0], num[1], num[2]));
+                System.out.print("Ball" + num[0] + ", ");
+                System.out.println(num[1] + ", " + num[2]);
+            }
+            
             Map<String, Object> levelData = levels.get(currentLevelIndex);
             List<String> colors = (List<String>) levelData.get("balls");
             for (String str : colors) {
@@ -269,12 +282,7 @@ public class Board {
                 }
             }
 
-            // Add balls based on xy
-            for (int[] num : xy) {
-                balls.add(new Ball(num[0], num[1], num[2]));
-                System.out.print("Ball" + num[0] + ", ");
-                System.out.println(num[1] + ", " + num[2]);
-            }
+            
         } else {
             System.out.println("No balls available to load.");
         }

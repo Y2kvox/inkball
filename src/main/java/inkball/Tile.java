@@ -1,14 +1,14 @@
 package inkball;
 
-public class Tile{
-    private TileContent content;
+public class Tile<T extends TileContent> {
+    private T content;   // Generic type T constrained to TileContent
     boolean safe;
 
     public Tile() {
         this.content = null;
     }
 
-    public void setContent(TileContent item) {
+    public void setContent(T item) {
         this.content = item;
     }
 
@@ -20,10 +20,11 @@ public class Tile{
         return content != null;
     }
 
-    public TileContent getContent() {
+    public T getContent() {
         return content;
     }
 
+    @Override
     public String toString() {
         if (content != null) {
             return content.toString();
@@ -31,14 +32,16 @@ public class Tile{
             return "Empty";
         }
     }
-    
-    public void setSafe(){
+
+    public void setSafe() {
         this.safe = true;
     }
 
-    public boolean getSafe(){
+    public boolean getSafe() {
         return this.safe;
     }
 
-   
+    public void setUnsafe() {
+        this.safe = false;
+    }
 }

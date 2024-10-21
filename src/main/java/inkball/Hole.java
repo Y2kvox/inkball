@@ -1,7 +1,6 @@
 package inkball;
 
 import processing.core.PImage;
-import processing.core.PApplet;
 import processing.core.PVector;
 
 import java.util.ArrayList;
@@ -75,7 +74,7 @@ public class Hole implements TileContent {
             float height = 2 * App.CELLSIZE;
             app.image(sprite, drawX, drawY, width, height);
             updatePixelPositions(); // Update pixel positions when drawing
-            // Optionally draw the pixel positions for debugging
+            //Optionally draw the pixel positions
             // app.fill(255, 0, 0, 100);
             // for (PVector pixel : pixelPositions) {
             //     app.rect(pixel.x, pixel.y, 1, 1); // Draw small rectangles for each pixel
@@ -86,10 +85,19 @@ public class Hole implements TileContent {
     // Method to check if a ball touches any pixel of the hole
     public boolean checkCollision(Ball ball) {
         for (PVector pixel : pixelPositions) {
-            if (PVector.dist(new PVector(ball.posX, ball.posY), pixel) < 1) {
+            if (PVector.dist(new PVector(ball.position.x, ball.position.y), pixel) < 1) {
                 return true; // Collision detected
+                
             }
         }
         return false; // No collision
+        
     }
+
+    public PVector getHoleCenter() {
+        float centerX = drawX + App.CELLSIZE;  // Half the width of the hole
+        float centerY = drawY + App.CELLSIZE;  // Half the height of the hole
+        return new PVector(centerX, centerY);  // Return the center as a PVector
+    }
+    
 }
