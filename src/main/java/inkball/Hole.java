@@ -11,6 +11,7 @@ public class Hole implements TileContent {
     int holeIndex;
     int drawX;
     int drawY;
+    int s;
     List<PVector> pixelPositions; // List to store pixel positions of the hole
 
     public Hole(int holeIndex) {
@@ -20,6 +21,7 @@ public class Hole implements TileContent {
         } else {
             System.out.println("Invalid hole: " + holeIndex);
         }
+        this.s = 0;
 
         
         this.pixelPositions = new ArrayList<>(); // Initialize the pixel positions list
@@ -27,14 +29,6 @@ public class Hole implements TileContent {
 
     public int getHoleIndex() {
         return this.holeIndex;
-    }
-
-    public int getX() {
-        return this.drawX;
-    }
-
-    public int getY() {
-        return this.drawY;
     }
 
     public void setX(int n) {
@@ -74,7 +68,7 @@ public class Hole implements TileContent {
             float height = 2 * App.CELLSIZE;
             app.image(sprite, drawX, drawY, width, height);
             updatePixelPositions(); // Update pixel positions when drawing
-            //Optionally draw the pixel positions
+            // Optionally draw the pixel positions
             // app.fill(255, 0, 0, 100);
             // for (PVector pixel : pixelPositions) {
             //     app.rect(pixel.x, pixel.y, 1, 1); // Draw small rectangles for each pixel
@@ -86,12 +80,12 @@ public class Hole implements TileContent {
     public boolean checkCollision(Ball ball) {
         for (PVector pixel : pixelPositions) {
             if (PVector.dist(new PVector(ball.position.x, ball.position.y), pixel) < 1) {
-                return true; // Collision detected
-                
+                ball.hit = true; // Set the hit flag to true
+                s += 1;
+                return true; // Collision detectedz
             }
         }
         return false; // No collision
-        
     }
 
     public PVector getHoleCenter() {
@@ -100,4 +94,8 @@ public class Hole implements TileContent {
         return new PVector(centerX, centerY);  // Return the center as a PVector
     }
     
+
+    public int sSum() {
+        return s;
+    }
 }

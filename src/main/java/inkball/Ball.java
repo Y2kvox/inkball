@@ -3,7 +3,7 @@ package inkball;
 import processing.core.PImage;
 import processing.core.PVector;
 
-public class Ball implements TileContent {
+public class Ball{
     PImage sprite;
     int colorIndex;
     PVector velocity;  // Vector for velocity
@@ -13,8 +13,8 @@ public class Ball implements TileContent {
     static String level;
     float plusMod;
     float minusMod;
-    boolean hit;
-    boolean notSet = true;
+    boolean hit, checked;
+    boolean notSet = true, once = true;
     float size;  // Current size of the ball
     static final float SHRINK_RATE = 1.0f;  // Amount to shrink each frame
     float radius = 16;
@@ -33,7 +33,7 @@ public class Ball implements TileContent {
         // Initialize random velocity vector, either -2 or 2 for both x and y
         this.velocity = new PVector((Math.random() < 0.5) ? -2 : 2, (Math.random() < 0.5) ? -2 : 2);
 
-        System.out.println("Ball " + this.colorIndex + " score = " + this.scoreIncrease);
+        //System.out.println("Ball " + this.colorIndex + " score = " + this.scoreIncrease);
     }
 
     // Set sprite and scores based on the ball's colorIndex
@@ -68,64 +68,7 @@ public class Ball implements TileContent {
         position.add(velocity);
     }
 
-    // public void bounceOffBoundary(Board board) {
-    //     // Check for boundary collisions and reverse direction
-    //     if (position.x <= 0 || position.x >= App.WIDTH - App.CELLSIZE) {
-    //         velocity.x *= -1;  // Reverse X direction
-    //     }
-    //     if (position.y <= App.TOPBAR || position.y >= App.HEIGHT - App.CELLSIZE) {
-    //         velocity.y *= -1;  // Reverse Y direction
-    //     }
     
-    //     // Iterate over each tile on the board
-    //     for (int y = 0; y < board.height; y++) {
-    //         for (int x = 0; x < board.width; x++) {
-    //             Tile tile = board.grid[y][x];
-    
-    //             // Wall collision detection
-    //             if (tile.hasContent() && tile.getContent() instanceof Wall) {
-    //                 Wall wall = (Wall) tile.getContent();
-    //                 PVector wallPos = new PVector(wall.getX(), wall.getY());
-    
-    //                 // X-direction check
-    //                 if (position.y >= wallPos.y - 6 * App.CELLSIZE && position.y <= wallPos.y + 6 * App.CELLSIZE) {
-    //                     if (PVector.dist(new PVector(position.x, wallPos.y), wallPos) <= App.CELLSIZE) {
-    //                         velocity.x *= -1;
-    //                         updateBallTypeIfNeeded(wall);
-    //                     }
-    //                 }
-    //                 // Y-direction check
-    //                 if (position.x >= wallPos.x - 6 * App.CELLSIZE && position.x <= wallPos.x + 6 * App.CELLSIZE) {
-    //                     if (PVector.dist(new PVector(wallPos.x, position.y), wallPos) <= App.CELLSIZE) {
-    //                         velocity.y *= -1;
-    //                         updateBallTypeIfNeeded(wall);
-    //                     }
-    //                 }
-    //             }
-    
-    //             // Hole collision detection
-    //             if (tile.hasContent() && tile.getContent() instanceof Hole) {
-    //                 Hole hole = (Hole) tile.getContent();
-    
-    //                 if (hole.checkCollision(this)) {
-    //                     this.hit = true;
-                        
-    //                     if (this.colorIndex == hole.holeIndex || this.colorIndex == 0 || hole.holeIndex == 0) {
-    //                         scorePlus();
-    //                     } else {
-    //                         scoreMinus();
-    //                     }
-                        
-    //                     this.notSet = false;
-    //                 }
-                    
-    //             }
-    //         }
-    //     }
-    // }
-
-    // Handle collision with a wall
-
 
     // Function to handle ball collision with a wall
     public void handleCollision(Wall wall) {
@@ -137,7 +80,7 @@ public class Ball implements TileContent {
 
         // Calculate wall's edges
         float wallLeft = wall.position.x;
-        float wallRight = wall.position.x + wall.size; // Assuming wall.size gives the width/height
+        float wallRight = wall.position.x + wall.size/2; // Assuming wall.size gives the width/height
         float wallTop = wall.position.y;
         float wallBottom = wall.position.y + wall.size;
 
@@ -191,24 +134,25 @@ public class Ball implements TileContent {
         return radius;
     }
 
-    public boolean scorePlus() {
-        if (hit && notSet) {
+    public float scorePlus() {
+        if (!hit && notSet) {
             ballScore += increaseScore();
-            return true;
+            return ballScore;
         }
-        return false;
+        return 0;
     }
 
-    public boolean scoreMinus() {
-        if (hit && notSet) {
+    public float scoreMinus() {
+        if (!hit && notSet) {
             ballScore -= decreaseScore();
-            return true;
+            return ballScore;
+            
         }
-        return false;
+        return 0;
     }
 
     public float getScore() {
-        return ballScore;
+        return this.ballScore;
     }
 
     public float increaseScore() {
@@ -253,6 +197,7 @@ public class Ball implements TileContent {
             // Decrease the size
             size -= SHRINK_RATE;
             
+            
             if (size < 0) {
                 size = 0;  // Ensure size doesn't go negative
             }
@@ -269,10 +214,17 @@ public class Ball implements TileContent {
         return "ball";
     }
 
-    @Override
-    public void draw(App app, int x, int y) {
+    public void draw(App app) {
         if (sprite != null) {
             app.image(sprite, position.x, position.y, size, size);
+        } else {
+            App.println("Ball not loading properly");
+        }
+    }
+
+    public void draw(App app, int x, int y) {
+        if (sprite != null) {
+            app.image(sprite, x,y, size, size);
         } else {
             App.println("Ball not loading properly");
         }

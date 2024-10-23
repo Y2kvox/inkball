@@ -1,3 +1,4 @@
+
 package inkball;
 
 import processing.core.PApplet;
@@ -29,7 +30,7 @@ public class App extends PApplet {
 
     public static final int INITIAL_PARACHUTES = 1;
 
-    public static final int FPS = 120;
+    public static final int FPS = 30;
 
     public String configPath;
     //sprites
@@ -46,18 +47,20 @@ public class App extends PApplet {
     //time
     private int timerDuration;
     private int timeRemaining;
-    private boolean timerRunning; // Timer state
+    boolean timerRunning; // Timer state
     private int lastMillis;
 
-    //drawing in mouse
+    //line
     boolean canDraw;
     ArrayList<Line> drawnLines = new ArrayList<>(); // Store all drawn lines
+    ArrayList<ArrayList<Line>> allLines = new ArrayList<>();
     PVector lastPoint; // To store the last drawn point
 
     //spawn rate
     int ballReleaseInterval;
     long lastBallReleaseTime;
     int ballsReleased;
+    int count = 0;
 
     //pause
     boolean paused;
@@ -96,9 +99,10 @@ public class App extends PApplet {
         board.addBalls();
         currentBalls = board.getBalls();
         ballReleaseInterval = board.getInterval();
+        
 
     
-        canDraw = false;                     // Set-Reset drawing state
+        //canDraw = false;                     // Set-Reset drawing state
     
         // Set-Reset ball spawning logic
         ballsReleased = 1;                   // Set-Reset released ball count
@@ -116,6 +120,7 @@ public class App extends PApplet {
             
             // If the game is paused, stop the ball release timer
             if (paused) {
+                canDraw = false; // Stop drawing
                 lastBallReleaseTime = System.currentTimeMillis(); // Pause ball spawning
             } else {
                 // On resume, adjust the ball release timing
@@ -134,19 +139,22 @@ public class App extends PApplet {
 
     @Override
     public void mousePressed(MouseEvent e) {
-        // create a new player-drawn line object
-        if(mouseButton == LEFT && timerRunning) canDraw = true;
-
-
+        // Only allow drawing if the game is not paused
+        if (mouseButton == LEFT && timerRunning && !paused) {
+            canDraw = true;
+        } else {
+            canDraw = false; // Ensure canDraw is false if the game is paused or timer is not running
+        }
     }
+
 	
     @Override
     public void mouseDragged(MouseEvent e) {
         PVector currentPoint = new PVector(mouseX, mouseY);
         
-        if (lastPoint != null && mouseButton == LEFT && timerRunning) {
+        if (lastPoint != null && mouseButton == LEFT && timerRunning && !paused) {
             // Create a new line segment from the last point to the current point
-            drawnLines.add(new Line(lastPoint.copy(), currentPoint.copy())); // Store the line
+            drawnLines.add(new Line(lastPoint.copy(), currentPoint.copy())); // Store the line segment
             stroke(0);
             strokeWeight(10);
             line(lastPoint.x, lastPoint.y, currentPoint.x, currentPoint.y);
@@ -160,19 +168,18 @@ public class App extends PApplet {
     public void mouseReleased(MouseEvent e) {
         canDraw = false;
         lastPoint = null;
-		
+        
+        // When the mouse is released, add the entire drawn line to allLines and clear drawnLines
+        if (!drawnLines.isEmpty()) {
+            allLines.add(new ArrayList<>(drawnLines)); // Add the entire line
+        }
     }
 
 
-
     
     
+    @SuppressWarnings("rawtypes")
     public void ballCheck() {
-        /*
-          Resets the score for the current check and manages the release of new balls based on the interval.
-          Draws each released ball, updates its movement, checks for collisions, and handles interactions with holes.
-        */
-    
         score = 0;  // Reset score for this check
         long currentTime = System.currentTimeMillis();
     
@@ -187,8 +194,7 @@ public class App extends PApplet {
             Ball ball = currentBalls.get(i);
             stroke(255,0,0);
             strokeWeight(5);
-            ball.draw(this, (int) ball.position.x, (int) ball.position.y);  // Draw the ball
-            //point(ball.position.x, ball.position.y);
+            ball.draw(this);  // Draw the ball
     
             // Update ball movement and check for collisions if the game is not paused
             if (!paused && timerRunning) {
@@ -214,65 +220,125 @@ public class App extends PApplet {
                     // Check if the ball is colliding with the hole
                     if (hole.checkCollision(ball)) {
                         ball.shrink(holeCenter);  // Pass the hole center to the shrink method
+                        if((ball.colorIndex == hole.holeIndex || hole.holeIndex == 0 || ball.colorIndex == 0) && !ball.hit){
+                            ball.scorePlus();
+                            ball.hit = !ball.hit;
+                        }else if (!ball.hit){
+                            ball.scoreMinus();
+                            ball.hit = !ball.hit;
+                        }
+                        
                         break;  // Exit the loop if the ball has interacted with a hole
                     }
                 }
             }
+            checkLevelEnd();
+
+            // Check for collisions between the ball and the full lines
+
+            Iterator<ArrayList<Line>> lineIterator = allLines.iterator();
+            while (lineIterator.hasNext()) {
+                ArrayList<Line> fullLine = lineIterator.next();
+                boolean lineHit = false; // Track if any part of the line is hit
+
+                for (Line line : fullLine) {
+                    if (line.checkCollision(ball)) {
+                        // If any part of the line is hit, mark it as hit and set velocity
+                        PVector newVelocity = line.calculateNewVelocity(ball);
+                        ball.velocity.set(newVelocity);
+                        lineHit = true; // Mark the whole line as hit
+                        break;
+                    }
+                }
+
+                if (lineHit) {
+                    lineIterator.remove(); // Remove the entire line if hit
+                }
+            }
+            
         }
+        
     }
     
     
-    
-    
-    
-     
-    
-    
-    
+
 
 	@Override
     public void draw() {
         background(225);
+        rect(0, 32, CELLSIZE * currentBalls.size(), 32);
         board.draw(this);
-        ballCheck();
         
+        // Check if time has run out
+        if (timeRemaining <= 0) {
+            timerRunning = false; // Stop the timer
+            timeRemaining = 0; // Ensure time remaining is set to zero
+            gameOver(); // Display game over message
+
+            // Move to the next level
+            goToNextlevel();
+            setup(); // Reset the game state for the new level
+            return; // Exit the draw method to prevent further drawing in this frame
+        }
+
+        if (timerRunning) {
+            ballCheck();
+        }
+
+        // Update timer logic
         if (timerRunning && !paused) {
             int currentMillis = millis();
             if (currentMillis - lastMillis >= 1000) { // Check if one second has passed
                 timeRemaining--; // Decrease time remaining by 1 second
                 lastMillis = currentMillis; // Update the lastMillis
             }
-
-            // Check if the timer has reached zero
-            if (timeRemaining <= 0) {
-                timerRunning = false; // Stop the timer
-                timeRemaining = 0;
-            }
         }
+
+        // Render timer and score
         fill(0);
         textSize(20);
-        text("Timer: "+ timeRemaining, 450, TOPBAR);
-        text("Score: "+ score, 450, TOPBAR/2);
+        text("Timer: " + timeRemaining, 450, TOPBAR);
+        text("Score: " + score, 450, TOPBAR / 2);
+
+        // If the game is paused, display the paused message
+        if (paused) {
+            textSize(30);
+            text(" *** PAUSED ***", 150, TOPBAR);
+        }
+
+        // // Draw the lines
         stroke(0);
         strokeWeight(10);
-        if(timeRemaining == 0){
-            gameOver();
-        }
-        if(paused){
-            textSize(30);
-            text(" *** PAUSED ***", 150,TOPBAR);
-        }
-        
         for (Line line : drawnLines) {
-            line(line.start.x, line.start.y, line.end.x, line.end.y);
+            line.draw(this);
         }
         
-        
-		//----------------------------------
-        //----------------------------------
-		//display game end message
-
     }
+
+    public boolean allBallsHit(){
+        for(Ball b : currentBalls){
+            if(b.hit && !b.checked){
+                count++;
+                b.checked = true;
+            }
+        }
+        if(count == currentBalls.size()){
+            return true;
+        }
+        return false;
+    }
+
+    public void checkLevelEnd() {
+        if(allBallsHit()){
+            double timeBonus = 1 * 15; // 1 unit every 0.067 seconds means 15 units per second
+            score += timeBonus;
+    
+            // Call the next level method
+            goToNextlevel();
+            setup();
+        }
+    }
+    
 
     //sprite storage
     public void loadSprites(){
@@ -322,27 +388,22 @@ public class App extends PApplet {
     
 
     public void resetGame() {
+        currentLevelIndex = 0;
         setup();
-        score = 0; // necessary for reset logic and setup logic being responsible for levelup
-        
-        //board.loadLevelFromJson(configPath); // Reload board from JSON file
-        // board.resetBalls();                  // Reset ball positions, velocities, etc.
-    
-        // // Reset other game variables
-        // timeRemaining = timerDuration - 1;   // Reset timer
-        // timerRunning = true;                 // Restart timer
-        // lastMillis = millis();               // Update lastMillis to current time
-    
-        // canDraw = false;                     // Reset drawing state
-    
-        // // Reset ball spawning logic
-        // ballsReleased = 0;                   // Reset released ball count
-        // lastBallReleaseTime = System.currentTimeMillis(); // Reset the ball release timer
+        score = 0;
+        drawnLines.clear();
+        allLines.clear();
 
     }
 
     public void goToNextlevel(){
+        if(currentLevelIndex > 2){
+            currentLevelIndex = 0;
+        }else{
         currentLevelIndex++;
+        }
+        allLines.clear();
+        drawnLines.clear();
     }
 
     public void gameOver(){

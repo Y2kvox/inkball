@@ -18,7 +18,7 @@ public class Board {
     Tile[][] grid;
     boolean lock;
     int row;
-    int col;
+    int col,s;
     int currentLevelIndex; // Track the current level index
     List<Map<String, Object>> levels;
     ArrayList<Ball> balls;
@@ -42,6 +42,7 @@ public class Board {
         this.balls = new ArrayList<>(); // Initialize the balls list
         this.spawners = new ArrayList<>(); // Initialize the spawners list
         xy = new ArrayList<>();
+        this.s = 0;
     }
     
 
@@ -166,9 +167,9 @@ public class Board {
                         default:
                             break;
                     }
-                    System.out.print(grid[y][x].getContent() + ", ");
+                    //System.out.print(grid[y][x].getContent() + ", ");
                 }
-                System.out.println();
+                //System.out.println();
                 y++;
             }
         } catch (IOException e) {
@@ -176,6 +177,12 @@ public class Board {
         }
     }
 
+    public int getSsum() {
+        for(Hole hole : holes){
+            s += hole.sSum();
+        }
+        return s;
+    }
 
     
 
@@ -276,9 +283,9 @@ public class Board {
                 int[] s = getRandomSpawnerCoords();
                 
                 if (s != null) {
-                    System.out.print("Ball" + n + ", ");
+                    //System.out.print("Ball" + n + ", ");
                     balls.add(new Ball(n, s[0], s[1]));
-                    System.out.println(s[0] + ", " + s[1]);
+                    //System.out.println(s[0] + ", " + s[1]);
                 }
             }
 
