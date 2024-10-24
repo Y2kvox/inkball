@@ -2,7 +2,7 @@ package inkball;
 
 import processing.core.PImage;
 
-public class TileWithImage implements TileContent {
+public class TileWithImage implements TileContent{
     PImage tileSprite;
 
     public TileWithImage() {

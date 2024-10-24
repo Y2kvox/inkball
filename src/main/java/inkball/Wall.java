@@ -51,19 +51,19 @@ public class Wall implements TileContent {
             return position.x;
     }
     
-    public boolean checkCollision(Ball ball) {
-        // Calculate the wall's bounds
-        float wallLeft = this.position.x;
-        float wallRight = this.position.x + this.size;
-        float wallTop = this.position.y;
-        float wallBottom = this.position.y + this.size;
+    // public boolean checkCollision(Ball ball) {
+    //     // Calculate the wall's bounds
+    //     float wallLeft = this.position.x;
+    //     float wallRight = this.position.x + this.size;
+    //     float wallTop = this.position.y;
+    //     float wallBottom = this.position.y + this.size;
     
-        // Check for collision using the ball's position and radius
-        boolean collisionX = ball.position.x + ball.radius*2 >= wallLeft && ball.position.x <= wallRight;
-        boolean collisionY = ball.position.y + ball.radius*2 >= wallTop && ball.position.y - ball.radius*2 <= wallBottom;
+    //     // Check for collision using the ball's position and radius
+    //     boolean collisionX = ball.position.x + ball.radius*2 >= wallLeft && ball.position.x <= wallRight;
+    //     boolean collisionY = ball.position.y + ball.radius*2 >= wallTop && ball.position.y - ball.radius*2 <= wallBottom;
     
-        return collisionX && collisionY;
-    }
+    //     return collisionX && collisionY;
+    // }
     
 
     @Override

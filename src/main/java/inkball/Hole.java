@@ -11,7 +11,6 @@ public class Hole implements TileContent {
     int holeIndex;
     int drawX;
     int drawY;
-    int s;
     List<PVector> pixelPositions; // List to store pixel positions of the hole
 
     public Hole(int holeIndex) {
@@ -21,7 +20,6 @@ public class Hole implements TileContent {
         } else {
             System.out.println("Invalid hole: " + holeIndex);
         }
-        this.s = 0;
 
         
         this.pixelPositions = new ArrayList<>(); // Initialize the pixel positions list
@@ -80,7 +78,6 @@ public class Hole implements TileContent {
     public boolean checkCollision(Ball ball) {
         for (PVector pixel : pixelPositions) {
             if (PVector.dist(new PVector(ball.position.x, ball.position.y), pixel) < 1) {
-                s += 1;
                 return true; // Collision detectedz
             }
         }
@@ -92,9 +89,17 @@ public class Hole implements TileContent {
         float centerY = drawY + App.CELLSIZE;  // Half the height of the hole
         return new PVector(centerX, centerY);  // Return the center as a PVector
     }
+
+    public void adjustBallVelocity(Ball ball) {
+        PVector holeCenter = getHoleCenter();
+        float distance = PVector.dist(ball.position, holeCenter); // Calculate distance to hole center
+
+        if (distance < 100) { // Adjust if the ball is within a certain distance
+            float speedIncrease = (100 - distance) * 0.01f; // Increase factor (0.1 can be adjusted)
+            ball.velocity.add(PVector.sub(holeCenter, ball.position).normalize().mult(speedIncrease));
+        }
+    }
     
 
-    public int sSum() {
-        return s;
-    }
+    
 }

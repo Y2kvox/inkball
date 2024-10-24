@@ -30,7 +30,7 @@ public class App extends PApplet {
 
     public static final int INITIAL_PARACHUTES = 1;
 
-    public static final int FPS = 300;
+    public static final int FPS = 30;
 
     public String configPath;
     //sprites
@@ -222,6 +222,17 @@ public class App extends PApplet {
                     if (tile.hasContent() && tile.getContent() instanceof Wall) {
                         Wall wall = (Wall) tile.getContent();
                         ball.handleCollision(wall);
+                    }else if (tile.hasContent() && tile.getContent() instanceof Brick) {
+                        Brick brick = (Brick) tile.getContent();
+                        ball.handleBrickCollision(brick);
+                        if(brick.checkBallType(ball) && brick.checkBrickCollision(ball)){
+                            brick.decreaseStrength();
+                            System.out.println("Brick demolishing");
+                            if(brick.isDestroyed()){
+                                
+                            }
+                        }
+                        
                     }
                 }
             }
@@ -233,6 +244,7 @@ public class App extends PApplet {
                     // Check if the ball is colliding with the hole
                     if (hole.checkCollision(ball)) {
                         ball.shrink(holeCenter);  // Pass the hole center to the shrink method
+                        hole.adjustBallVelocity(ball);
                         if((ball.colorIndex == hole.holeIndex || hole.holeIndex == 0 || ball.colorIndex == 0) && !ball.hit){
                             ball.scorePlus();
                             ball.hit = !ball.hit;
@@ -251,16 +263,7 @@ public class App extends PApplet {
                 }
             }
 
-            // for(Brick brick : board.bricks){
-            //     if(brick.checkBrickCollision(ball)){
-            //         if(brick.checkBallType(ball)){
-            //             brick.decreaseStrength();
-            //             if(brick.isDestroyed()){
-            //                 brick.replaceWithTileWithImage(board);
-            //             }
-            //         }
-            //     }
-            // }
+            
 
             checkLevelEnd(); // check level-end condition since the line check will be useless after this point
 
@@ -331,8 +334,8 @@ public class App extends PApplet {
 
         // If the game is paused, display the paused message
         if (paused) {
-            textSize(30);
-            text(" *** PAUSED ***", 150, TOPBAR);
+            textSize(20);
+            text(" *** PAUSED ***", 250, TOPBAR);
         }
 
         // // Draw the lines
@@ -432,7 +435,7 @@ public class App extends PApplet {
     
 
     public void resetGame() {
-        currentLevelIndex = 0;
+        //currentLevelIndex = 0;
         count = 0;
         score = 0;
         drawnLines.clear();
@@ -461,7 +464,8 @@ public class App extends PApplet {
     }
 
     public void gameOver(){
-        textSize(28);
+        textSize(20);
+        fill(0);
         text("=== TIME'S UP === ", 150,TOPBAR);
     }
    

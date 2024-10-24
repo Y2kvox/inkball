@@ -18,6 +18,7 @@ public class Ball{
     float size;  // Current size of the ball
     static final float SHRINK_RATE = 1.0f;  // Amount to shrink each frame
     float radius = 16;
+    Brick lastCollidedBrick = null;
 
     public Ball(int colorIndex, int startX, int startY) {
         this.rightHole = true;
@@ -117,6 +118,63 @@ public class Ball{
             updateBallTypeIfNeeded(wall);  // Update ball type if needed
         }
     }
+
+
+    public void handleBrickCollision(Brick brick) {
+        if (brick.checkBrickCollision(this)) {
+            // Only decrease strength if the ball is colliding with a new brick
+            if (lastCollidedBrick != brick) {
+                brick.decreaseStrength();
+                lastCollidedBrick = brick; // Set this brick as the last collided one
+            }
+        } else if (lastCollidedBrick == brick) {
+            // Reset the collision when the ball is no longer touching this brick
+            lastCollidedBrick = null;
+        }
+        // Calculate ball's edges
+        float ballLeft = this.position.x - this.radius;
+        float ballRight = this.position.x + this.radius;
+        float ballTop = this.position.y - this.radius;
+        float ballBottom = this.position.y + this.radius;
+
+        // Calculate  brick's edges
+        float  brickLeft =  brick.position.x;
+        float  brickRight =  brick.position.x +  brick.size/2; // Assuming  brick.size gives the width/height
+        float  brickTop =  brick.position.y;
+        float  brickBottom =  brick.position.y +  brick.size;
+
+        // Check for collision
+        if (ballRight >  brickLeft && ballLeft <  brickRight && ballBottom >  brickTop && ballTop <  brickBottom) {
+            // Find the overlap on each side
+            float overlapLeft = ballRight -  brickLeft;
+            float overlapRight =  brickRight - ballLeft;
+            float overlapTop = ballBottom -  brickTop;
+            float overlapBottom =  brickBottom - ballTop;
+
+            // Determine the smallest overlap
+            float minOverlap = Math.min(Math.min(overlapLeft, overlapRight), Math.min(overlapTop, overlapBottom));
+
+            // Change direction based on the side of collision
+            if (minOverlap == overlapLeft) {
+                // Collision from the left side
+                this.velocity.x *= -1;  // Reverse X direction
+                this.position.x =  brickLeft - this.radius; // Move the ball outside the  brick
+            } else if (minOverlap == overlapRight) {
+                // Collision from the right side
+                this.velocity.x *= -1;  // Reverse X direction
+                this.position.x =  brickRight + this.radius; // Move the ball outside the  brick
+            } else if (minOverlap == overlapTop) {
+                // Collision from the top side
+                this.velocity.y *= -1;  // Reverse Y direction
+                this.position.y =  brickTop - this.radius; // Move the ball outside the  brick
+            } else if (minOverlap == overlapBottom) {
+                // Collision from the bottom side
+                this.velocity.y *= -1;  // Reverse Y direction
+                this.position.y =  brickBottom + this.radius; // Move the ball outside the  brick
+            }
+        }
+    }
+
 
 
     

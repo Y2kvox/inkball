@@ -2,7 +2,6 @@ package inkball;
 
 import java.io.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import processing.core.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +11,7 @@ import java.util.Map;
 import java.util.Random;
 
 
-
+@SuppressWarnings("rawtypes")
 public class Board {
     int width;
     int height;
@@ -59,6 +58,8 @@ public class Board {
         }
     }
 
+    
+    @SuppressWarnings("unchecked")
     public void placeItem(int x, int y, TileContent item) {
         if (x >= 0 && x < width && y >= 0 && y < height) {
             grid[y][x].setContent(item);
@@ -209,12 +210,7 @@ public class Board {
         }
     }
 
-    public int getSsum() {
-        for(Hole hole : holes){
-            s += hole.sSum();
-        }
-        return s;
-    }
+
 
     
 
@@ -309,6 +305,7 @@ public class Board {
             }
             
             Map<String, Object> levelData = levels.get(currentLevelIndex);
+            @SuppressWarnings("unchecked")
             List<String> colors = (List<String>) levelData.get("balls");
             for (String str : colors) {
                 Integer n = getColorCode(str);

@@ -4,20 +4,21 @@ import processing.core.PVector;
 import processing.core.PApplet;
 
 public class Brick implements TileContent {
-
-    PImage sprite;
+    PImage sprite, tileSprite;
     int brickType,size;
-    int drawX;
-    int drawY;
     PVector position;
-    boolean checked = true;
+    boolean enabled;
     int strength;
+    int drawX, drawY;
+
 
     public Brick(int brickType) {
         this.brickType = brickType;
+        this.tileSprite = App.tilesprite;
         this.sprite = App.bricksprite[brickType];
         this.size = App.CELLSIZE;
         this.strength = 3;
+        this.enabled = true;
     }
 
     public void setPosition(int x, int y){
@@ -26,6 +27,9 @@ public class Brick implements TileContent {
 
     public void decreaseStrength() {
         this.strength--;
+        if(strength <= 0) {
+            strength = 0;
+        }
     }
 
     public boolean isDestroyed() {
@@ -36,9 +40,7 @@ public class Brick implements TileContent {
         return (ball.colorIndex == this.brickType) || this.brickType == 0;
     }
 
-    public void replaceWithTileWithImage(Board board) {
-        board.placeItem(drawX, drawY, new TileWithImage());
-    }
+    
 
     public boolean checkBrickCollision(Ball ball) {
         // Calculate the brick's bounds
@@ -58,6 +60,10 @@ public class Brick implements TileContent {
         setPosition(x, y);
         drawX = x * App.CELLSIZE;
         drawY = y * App.CELLSIZE + App.TOPBAR;
-        app.image(sprite, drawX, drawY, App.CELLSIZE, App.CELLSIZE);
+        if(strength > 0){
+            app.image(sprite, drawX, drawY, App.CELLSIZE, App.CELLSIZE);
+        }else{
+            app.image(tileSprite, drawX, drawY, App.CELLSIZE, App.CELLSIZE);
+        }
     }
 }
