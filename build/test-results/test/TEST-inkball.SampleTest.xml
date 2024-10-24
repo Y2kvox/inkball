@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="inkball.SampleTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-10-24T04:39:53" hostname="ABRAR" time="1.775">
+  <properties/>
+  <testcase name="simpleTest()" classname="inkball.SampleTest" time="1.775"/>
+  <system-out><![CDATA[Tile.png loaded successfully.
+Tile.png loaded successfully.
+wall0.png loaded successfully.
+wall0.png loaded successfully.
+wall1.png loaded successfully.
+wall1.png loaded successfully.
+wall2.png loaded successfully.
+wall2.png loaded successfully.
+wall3.png loaded successfully.
+wall3.png loaded successfully.
+wall4.png loaded successfully.
+wall4.png loaded successfully.
+hole0.png loaded successfully.
+hole0.png loaded successfully.
+hole1.png loaded successfully.
+hole1.png loaded successfully.
+hole2.png loaded successfully.
+hole2.png loaded successfully.
+hole3.png loaded successfully.
+hole3.png loaded successfully.
+hole4.png loaded successfully.
+hole4.png loaded successfully.
+file name of config level arrayindex: 0 is level1.txt
+file name of config level arrayindex: 0 is level1.txt
+Ball2, 6, 13
+Ball2, 6, 13
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="inkball.tests" tests="2" skipped="0" failures="0" errors="0" timestamp="2024-10-24T04:39:55" hostname="ABRAR" time="0.101">
+  <properties/>
+  <testcase name="board()" classname="inkball.tests" time="0.045"/>
+  <testcase name="testPauseFunctionality()" classname="inkball.tests" time="0.055"/>
+  <system-out><![CDATA[Tile.png loaded successfully.
+wall0.png loaded successfully.
+wall1.png loaded successfully.
+wall2.png loaded successfully.
+Paused after setup: false
+wall3.png loaded successfully.
+Paused after pressing ' ': false
+Can draw after mouse press: false
+Paused after pressing ' ': false
+Can draw after mouse press: false
+]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

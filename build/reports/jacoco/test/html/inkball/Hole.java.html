@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Hole.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">inkball_scaffold</a> &gt; <a href="index.source.html" class="el_package">inkball</a> &gt; <span class="el_source">Hole.java</span></div><h1>Hole.java</h1><pre class="source lang-java linenums">package inkball;
+
+import processing.core.PImage;
+import processing.core.PVector;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Hole implements TileContent {
+    PImage sprite;
+    int holeIndex;
+    int drawX;
+    int drawY;
+    int s;
+    List&lt;PVector&gt; pixelPositions; // List to store pixel positions of the hole
+
+<span class="fc" id="L17">    public Hole(int holeIndex) {</span>
+<span class="fc" id="L18">        this.holeIndex = holeIndex;</span>
+<span class="pc bpc" id="L19" title="1 of 2 branches missed.">        if (holeIndex &gt;= 0) {</span>
+<span class="fc" id="L20">            this.sprite = App.holesprite[holeIndex];</span>
+        } else {
+<span class="nc" id="L22">            System.out.println(&quot;Invalid hole: &quot; + holeIndex);</span>
+        }
+<span class="fc" id="L24">        this.s = 0;</span>
+
+        
+<span class="fc" id="L27">        this.pixelPositions = new ArrayList&lt;&gt;(); // Initialize the pixel positions list</span>
+<span class="fc" id="L28">    }</span>
+
+    public int getHoleIndex() {
+<span class="nc" id="L31">        return this.holeIndex;</span>
+    }
+
+    public void setX(int n) {
+<span class="fc" id="L35">        this.drawX = n;</span>
+<span class="fc" id="L36">        updatePixelPositions(); // Update pixel positions</span>
+<span class="fc" id="L37">    }</span>
+
+    public void setY(int n) {
+<span class="fc" id="L40">        this.drawY = n;</span>
+<span class="fc" id="L41">        updatePixelPositions(); // Update pixel positions</span>
+<span class="fc" id="L42">    }</span>
+
+    // Update the pixel positions based on the hole's position
+    private void updatePixelPositions() {
+<span class="fc" id="L46">        pixelPositions.clear(); // Clear previous pixel positions</span>
+<span class="fc" id="L47">        int width = App.CELLSIZE * 2; // Assuming the hole takes up a 2x2 tile area</span>
+<span class="fc" id="L48">        int height = App.CELLSIZE * 2;</span>
+
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        for (int x = drawX; x &lt; drawX + width; x++) {</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">            for (int y = drawY; y &lt; drawY + height; y++) {</span>
+<span class="fc" id="L52">                pixelPositions.add(new PVector(x, y)); // Store each pixel position</span>
+            }
+        }
+<span class="fc" id="L55">    }</span>
+
+    @Override
+    public String toString() {
+<span class="nc" id="L59">        return &quot;hole&quot;;</span>
+    }
+
+    @Override
+    public void draw(App app, int x, int y) {
+<span class="pc bpc" id="L64" title="1 of 2 branches missed.">        if (sprite != null) {</span>
+<span class="fc" id="L65">            drawX = x * App.CELLSIZE;</span>
+<span class="fc" id="L66">            drawY = y * App.CELLSIZE + App.TOPBAR; </span>
+<span class="fc" id="L67">            float width = 2 * App.CELLSIZE;</span>
+<span class="fc" id="L68">            float height = 2 * App.CELLSIZE;</span>
+<span class="fc" id="L69">            app.image(sprite, drawX, drawY, width, height);</span>
+<span class="fc" id="L70">            updatePixelPositions(); // Update pixel positions when drawing</span>
+            // Optionally draw the pixel positions
+            // app.fill(255, 0, 0, 100);
+            // for (PVector pixel : pixelPositions) {
+            //     app.rect(pixel.x, pixel.y, 1, 1); // Draw small rectangles for each pixel
+            // }
+        }
+<span class="fc" id="L77">    }</span>
+
+    // Method to check if a ball touches any pixel of the hole
+    public boolean checkCollision(Ball ball) {
+<span class="fc bfc" id="L81" title="All 2 branches covered.">        for (PVector pixel : pixelPositions) {</span>
+<span class="pc bpc" id="L82" title="1 of 2 branches missed.">            if (PVector.dist(new PVector(ball.position.x, ball.position.y), pixel) &lt; 1) {</span>
+<span class="nc" id="L83">                s += 1;</span>
+<span class="nc" id="L84">                return true; // Collision detectedz</span>
+            }
+<span class="fc" id="L86">        }</span>
+<span class="fc" id="L87">        return false; // No collision</span>
+    }
+
+    public PVector getHoleCenter() {
+<span class="fc" id="L91">        float centerX = drawX + App.CELLSIZE;  // Half the width of the hole</span>
+<span class="fc" id="L92">        float centerY = drawY + App.CELLSIZE;  // Half the height of the hole</span>
+<span class="fc" id="L93">        return new PVector(centerX, centerY);  // Return the center as a PVector</span>
+    }
+    
+
+    public int sSum() {
+<span class="nc" id="L98">        return s;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

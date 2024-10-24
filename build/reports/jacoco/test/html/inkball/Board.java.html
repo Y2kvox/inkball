@@ -1,0 +1,363 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Board.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">inkball_scaffold</a> &gt; <a href="index.source.html" class="el_package">inkball</a> &gt; <span class="el_source">Board.java</span></div><h1>Board.java</h1><pre class="source lang-java linenums">package inkball;
+
+import java.io.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import processing.core.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+
+
+public class Board {
+    int width;
+    int height;
+    Tile[][] grid;
+    boolean lock;
+    int row;
+    int col,s;
+    int currentLevelIndex; // Track the current level index
+    List&lt;Map&lt;String, Object&gt;&gt; levels;
+    ArrayList&lt;Ball&gt; balls;
+    List&lt;Spawner&gt; spawners;
+    List&lt;int[]&gt; xy;
+<span class="fc" id="L27">    List&lt;Hole&gt; holes = new ArrayList&lt;&gt;();</span>
+    
+    
+
+
+<span class="fc" id="L32">    public Board(int width, int height, int currentLevelIndex) {</span>
+<span class="fc" id="L33">        this.currentLevelIndex = currentLevelIndex;</span>
+<span class="fc" id="L34">        this.width = width;</span>
+<span class="fc" id="L35">        this.height = height;</span>
+<span class="fc" id="L36">        grid = new Tile[height][width];</span>
+<span class="fc bfc" id="L37" title="All 2 branches covered.">        for (int i = 0; i &lt; height; i++) {</span>
+<span class="fc bfc" id="L38" title="All 2 branches covered.">            for (int j = 0; j &lt; width; j++) {</span>
+<span class="fc" id="L39">                grid[i][j] = new Tile(); // Ensure each tile is initialized</span>
+            }
+        }
+<span class="fc" id="L42">        this.balls = new ArrayList&lt;&gt;(); // Initialize the balls list</span>
+<span class="fc" id="L43">        this.spawners = new ArrayList&lt;&gt;(); // Initialize the spawners list</span>
+<span class="fc" id="L44">        xy = new ArrayList&lt;&gt;();</span>
+<span class="fc" id="L45">        this.s = 0;</span>
+<span class="fc" id="L46">    }</span>
+    
+
+    private void placeWall(int x, int y, int wallType) {
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        if (!grid[y][x].getSafe()) {</span>
+<span class="fc" id="L51">            Wall wall = new Wall(wallType);</span>
+<span class="fc" id="L52">            setWallType(wall, wallType);</span>
+<span class="fc" id="L53">            placeItem(x, y, wall);</span>
+<span class="fc" id="L54">        }else {</span>
+<span class="fc" id="L55">            placeItem(x, y, new TileWithImage());</span>
+        }
+<span class="fc" id="L57">    }</span>
+
+    public void placeItem(int x, int y, TileContent item) {
+<span class="pc bpc" id="L60" title="4 of 8 branches missed.">        if (x &gt;= 0 &amp;&amp; x &lt; width &amp;&amp; y &gt;= 0 &amp;&amp; y &lt; height) {</span>
+<span class="fc" id="L61">            grid[y][x].setContent(item);</span>
+        } else {
+<span class="nc" id="L63">            throw new IndexOutOfBoundsException(&quot;Coordinates out of bounds&quot;);</span>
+        }
+<span class="fc" id="L65">    }</span>
+
+    public void setWallType(Wall wall, int num) {
+<span class="fc" id="L68">        wall.wallType = num;</span>
+<span class="fc" id="L69">    }</span>
+
+    public void addHole(Hole h){
+<span class="fc" id="L72">        holes.add(h);</span>
+<span class="fc" id="L73">    }</span>
+
+    public List&lt;Hole&gt; getHoleList(){
+<span class="nc" id="L76">        return holes;</span>
+    }
+
+    
+
+    public void loadLevel(String filename) {
+<span class="fc" id="L82">        xy.clear();</span>
+<span class="fc" id="L83">        try (BufferedReader br = new BufferedReader(new FileReader(filename))) {</span>
+            String line;
+<span class="fc" id="L85">            int y = 0;</span>
+
+<span class="pc bpc" id="L87" title="1 of 4 branches missed.">            while ((line = br.readLine()) != null &amp;&amp; y &lt; height) {</span>
+<span class="pc bpc" id="L88" title="1 of 4 branches missed.">                for (int x = 0; x &lt; line.length() &amp;&amp; x &lt; width; x++) {</span>
+<span class="fc" id="L89">                    char ch = line.charAt(x);</span>
+
+<span class="pc bpc" id="L91" title="2 of 10 branches missed.">                    switch (ch) {</span>
+                        case 'X':
+<span class="fc" id="L93">                            placeItem(x, y, new Wall(0));</span>
+<span class="fc" id="L94">                            break;</span>
+                        
+                            // ball
+                        case 'B':
+<span class="pc bpc" id="L98" title="1 of 2 branches missed.">                            if (x + 1 &lt; line.length()) {</span>
+<span class="fc" id="L99">                                char colorChar = line.charAt(x + 1);</span>
+<span class="fc" id="L100">                                int colorIndex = Character.getNumericValue(colorChar);</span>
+<span class="fc" id="L101">                                placeItem(x, y, new TileWithImage());</span>
+<span class="fc" id="L102">                                xy.add(new int[] {colorIndex,x,y});</span>
+                                
+                            }
+<span class="fc" id="L105">                            grid[y][x+1].setSafe();</span>
+<span class="fc" id="L106">                            placeWall(x+1, y, 0); // ensures that the next tile has a tile image, walltype doesn't matter in this case</span>
+<span class="fc" id="L107">                            break;</span>
+                        
+                        case 'H':
+<span class="pc bpc" id="L110" title="2 of 4 branches missed.">                            if (x + 1 &lt; line.length() &amp;&amp; y + 1 &lt; height) {</span>
+<span class="fc" id="L111">                                char holeChar = line.charAt(x + 1);</span>
+<span class="fc" id="L112">                                int holeIndex = Character.getNumericValue(holeChar);</span>
+<span class="fc" id="L113">                                Hole hole = new Hole(holeIndex);</span>
+<span class="fc" id="L114">                                placeItem(x, y, hole);</span>
+<span class="fc" id="L115">                                hole.setX(x);</span>
+<span class="fc" id="L116">                                hole.setY(y);</span>
+<span class="fc" id="L117">                                addHole(hole);</span>
+                                //System.out.println(&quot;Hole coords: &quot;+hole.getX()+&quot;, &quot;+ hole.getY());
+                                
+<span class="fc" id="L120">                            } else {</span>
+<span class="nc" id="L121">                                placeItem(x, y, new Hole(0));</span>
+                            }
+                            // Define the offsets for the tiles to be marked as safe and part of the hole
+<span class="fc" id="L124">                            int[][] offsets = {</span>
+                                {0, 0}, {0, 1},
+                                {1, 0}, {1, 1}
+                            };
+
+                            // Iterate through each offset and apply the methods
+<span class="fc bfc" id="L130" title="All 2 branches covered.">                            for (int[] offset : offsets) {</span>
+<span class="fc" id="L131">                                int offsetY = offset[0];</span>
+<span class="fc" id="L132">                                int offsetX = offset[1];</span>
+
+<span class="fc" id="L134">                                grid[y + offsetY][x + offsetX].setSafe(); // Mark tile as safe</span>
+                            }
+
+<span class="fc" id="L137">                            break;</span>
+                        
+                        
+                        case '1':
+<span class="fc" id="L141">                            placeWall(x, y, 1);</span>
+<span class="fc" id="L142">                            break;</span>
+                        case '2':
+<span class="fc" id="L144">                            placeWall(x, y, 2);</span>
+<span class="fc" id="L145">                            break;</span>
+                        case '3':
+<span class="nc" id="L147">                            placeWall(x, y, 3);</span>
+<span class="nc" id="L148">                            break;</span>
+                        case '4':
+<span class="nc" id="L150">                            placeWall(x, y, 4);</span>
+<span class="nc" id="L151">                            break;</span>
+
+                            //spawner
+                        case 'S':
+<span class="fc" id="L155">                            Spawner spawn = new Spawner();</span>
+<span class="fc" id="L156">                            spawn.addCoords(x, y);</span>
+<span class="fc" id="L157">                            placeItem(x, y, spawn);</span>
+<span class="fc" id="L158">                            spawners.add(spawn);</span>
+<span class="fc" id="L159">                            break;</span>
+
+                            //tile image
+                        case ' ':
+<span class="fc bfc" id="L163" title="All 2 branches covered.">                            if(!grid[y][x].getSafe()){</span>
+<span class="fc" id="L164">                                placeItem(x, y, new TileWithImage());</span>
+                            }
+                            break;
+                        default:
+                            break;
+                    }
+                    //System.out.print(grid[y][x].getContent() + &quot;, &quot;);
+                }
+                //System.out.println();
+<span class="fc" id="L173">                y++;</span>
+            }
+<span class="nc" id="L175">        } catch (IOException e) {</span>
+<span class="nc" id="L176">            e.printStackTrace();</span>
+<span class="fc" id="L177">        }</span>
+<span class="fc" id="L178">    }</span>
+
+    public int getSsum() {
+<span class="nc bnc" id="L181" title="All 2 branches missed.">        for(Hole hole : holes){</span>
+<span class="nc" id="L182">            s += hole.sSum();</span>
+<span class="nc" id="L183">        }</span>
+<span class="nc" id="L184">        return s;</span>
+    }
+
+    
+
+    //spawners coords in a 2d list --&gt; allcords = [[x1,y1], [x2,y2],...,[xN,yN]]
+    public List&lt;int[]&gt; getAllSpawnerCoords() {
+<span class="fc" id="L191">        List&lt;int[]&gt; allCoords = new ArrayList&lt;&gt;();</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">        for (Spawner spawner : spawners) {</span>
+<span class="fc" id="L193">            allCoords.addAll(spawner.getCoords());</span>
+<span class="fc" id="L194">        }</span>
+<span class="fc" id="L195">        return allCoords;</span>
+    }
+    
+
+    //config file pull level array
+    @SuppressWarnings(&quot;unchecked&quot;)
+    public void loadLevelFromJson(String filename) {
+<span class="fc" id="L202">        ObjectMapper mapper = new ObjectMapper();</span>
+
+        try {
+<span class="fc" id="L205">            Map&lt;String, Object&gt; jsonData = mapper.readValue(new File(filename), Map.class);</span>
+
+<span class="pc bpc" id="L207" title="1 of 2 branches missed.">            if (jsonData.containsKey(&quot;levels&quot;)) {</span>
+<span class="fc" id="L208">                levels = (List&lt;Map&lt;String, Object&gt;&gt;) jsonData.get(&quot;levels&quot;);</span>
+<span class="fc" id="L209">                loadCurrentLevel(); // Load the current level upon initializing</span>
+            }
+<span class="nc" id="L211">        } catch (IOException e) {</span>
+<span class="nc" id="L212">            e.printStackTrace();</span>
+<span class="fc" id="L213">        }</span>
+<span class="fc" id="L214">    }</span>
+
+
+    //level from json
+    public void loadCurrentLevel() {
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        if (this.currentLevelIndex &lt; levels.size()) {</span>
+<span class="fc" id="L220">            Map&lt;String, Object&gt; levelData = levels.get(currentLevelIndex);</span>
+<span class="fc" id="L221">            String layoutFile = (String) levelData.get(&quot;layout&quot;);</span>
+<span class="fc" id="L222">            loadLevel(layoutFile);</span>
+<span class="fc" id="L223">            Ball.setLevel(layoutFile);</span>
+<span class="fc" id="L224">            System.out.println(&quot;file name of config level arrayindex: &quot;+currentLevelIndex+&quot; is &quot;+layoutFile);</span>
+<span class="fc" id="L225">        } else {</span>
+<span class="nc" id="L226">            System.out.println(&quot;No more levels to load.&quot;);</span>
+        }
+<span class="fc" id="L228">    }</span>
+
+    //advance to the next level
+    public void loadNextLevel() {
+<span class="nc" id="L232">        currentLevelIndex++;</span>
+<span class="nc" id="L233">        loadCurrentLevel(); // Load the next level</span>
+<span class="nc" id="L234">    }</span>
+
+    //time pull
+    public Integer getTime(){
+<span class="fc" id="L238">        Integer time = 0;</span>
+<span class="pc bpc" id="L239" title="1 of 2 branches missed.">        if (currentLevelIndex &lt; levels.size()) {</span>
+<span class="fc" id="L240">            Map&lt;String, Object&gt; levelData = levels.get(currentLevelIndex);</span>
+<span class="fc" id="L241">            time = (Integer) levelData.get(&quot;time&quot;);</span>
+<span class="fc" id="L242">        } else {</span>
+<span class="nc" id="L243">            System.out.println(&quot;No time available to load.&quot;);</span>
+        }
+
+<span class="fc" id="L246">        return time;</span>
+    }
+
+    public Integer getTimeForApp(){
+<span class="fc" id="L250">        Integer time = getTime();</span>
+<span class="pc bpc" id="L251" title="1 of 2 branches missed.">        time = (time &gt;= 0) ? time : 0;</span>
+<span class="fc" id="L252">        return time;</span>
+    }
+
+    // spawn interval pull
+    public Integer getInterval(){
+<span class="fc" id="L257">        Integer interval = 0;</span>
+<span class="pc bpc" id="L258" title="1 of 2 branches missed.">        if (currentLevelIndex &lt; levels.size()) {</span>
+<span class="fc" id="L259">            Map&lt;String, Object&gt; levelData = levels.get(currentLevelIndex);</span>
+<span class="fc" id="L260">            interval = (Integer) levelData.get(&quot;spawn_interval&quot;);</span>
+<span class="fc" id="L261">        } else {</span>
+<span class="nc" id="L262">            System.out.println(&quot;No spawn interval available to load.&quot;);</span>
+        }
+
+<span class="fc" id="L265">        return interval* 1000;</span>
+    }
+
+    // Ball list
+    public void addBalls() {
+<span class="pc bpc" id="L270" title="1 of 2 branches missed.">        if (currentLevelIndex &lt; levels.size()) {</span>
+            
+            // Add balls based on xy
+<span class="fc bfc" id="L273" title="All 2 branches covered.">            for (int[] num : xy) {</span>
+<span class="fc" id="L274">                balls.add(new Ball(num[0], num[1], num[2]));</span>
+<span class="fc" id="L275">                System.out.print(&quot;Ball&quot; + num[0] + &quot;, &quot;);</span>
+<span class="fc" id="L276">                System.out.println(num[1] + &quot;, &quot; + num[2]);</span>
+<span class="fc" id="L277">            }</span>
+            
+<span class="fc" id="L279">            Map&lt;String, Object&gt; levelData = levels.get(currentLevelIndex);</span>
+<span class="fc" id="L280">            List&lt;String&gt; colors = (List&lt;String&gt;) levelData.get(&quot;balls&quot;);</span>
+<span class="fc bfc" id="L281" title="All 2 branches covered.">            for (String str : colors) {</span>
+<span class="fc" id="L282">                Integer n = getColorCode(str);</span>
+<span class="fc" id="L283">                int[] s = getRandomSpawnerCoords();</span>
+                
+<span class="pc bpc" id="L285" title="1 of 2 branches missed.">                if (s != null) {</span>
+                    //System.out.print(&quot;Ball&quot; + n + &quot;, &quot;);
+<span class="fc" id="L287">                    balls.add(new Ball(n, s[0], s[1]));</span>
+                    //System.out.println(s[0] + &quot;, &quot; + s[1]);
+                }
+<span class="fc" id="L290">            }</span>
+
+            
+<span class="fc" id="L293">        } else {</span>
+<span class="nc" id="L294">            System.out.println(&quot;No balls available to load.&quot;);</span>
+        }
+<span class="fc" id="L296">    }</span>
+
+    //coords = [[x1,y1], [x2,y2],...[xN,yN]] --&gt; returns [xM,yM]
+    private int[] getRandomSpawnerCoords() {
+<span class="fc" id="L300">        List&lt;int[]&gt; coords = getAllSpawnerCoords();</span>
+<span class="pc bpc" id="L301" title="1 of 2 branches missed.">        if (coords.isEmpty()) {</span>
+<span class="nc" id="L302">            return null; // Return null if no coordinates are available</span>
+        }
+<span class="fc" id="L304">        Random random = new Random();</span>
+<span class="fc" id="L305">        int index = random.nextInt(coords.size());</span>
+<span class="fc" id="L306">        return coords.get(index); // Return the randomly selected coordinates</span>
+    }
+
+
+    //color convertor
+    public Integer getColorCode(String str) {
+<span class="fc" id="L312">    Map&lt;String, Integer&gt; colorMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L313">    colorMap.put(&quot;blue&quot;, 2);</span>
+<span class="fc" id="L314">    colorMap.put(&quot;grey&quot;, 0);</span>
+<span class="fc" id="L315">    colorMap.put(&quot;orange&quot;, 1);</span>
+<span class="fc" id="L316">    colorMap.put(&quot;green&quot;, 3);</span>
+<span class="fc" id="L317">    colorMap.put(&quot;yellow&quot;, 4);</span>
+
+<span class="fc" id="L319">    return colorMap.get(str);</span>
+    }
+    
+    public ArrayList&lt;Ball&gt; getBalls() {
+<span class="fc" id="L323">        return balls;</span>
+    }
+
+    public void resetBalls() {
+<span class="nc" id="L327">        lock = true;</span>
+<span class="nc" id="L328">        balls.clear();</span>
+<span class="nc" id="L329">        addBalls();</span>
+<span class="nc" id="L330">    }</span>
+    
+    public void draw(App app) {
+        // First, draw the tile backgrounds
+<span class="fc bfc" id="L334" title="All 2 branches covered.">        for (int y = 0; y &lt; height; y++) {</span>
+<span class="fc bfc" id="L335" title="All 2 branches covered.">            for (int x = 0; x &lt; width; x++) {</span>
+<span class="fc" id="L336">                Tile tile = grid[y][x];</span>
+<span class="fc bfc" id="L337" title="All 2 branches covered.">                if (tile.hasContent()) {</span>
+                    // Draw the tile image if it has a specific background like wall or tile image
+<span class="fc bfc" id="L339" title="All 2 branches covered.">                    if (tile.getContent() instanceof TileWithImage) {</span>
+<span class="fc" id="L340">                        tile.getContent().draw(app, x, y);</span>
+                    }
+                }
+            }
+        }
+    
+        // draw the objects like balls, spawners, and holes on tile backgrounds
+<span class="fc bfc" id="L347" title="All 2 branches covered.">        for (int y = 0; y &lt; height; y++) {</span>
+<span class="fc bfc" id="L348" title="All 2 branches covered.">            for (int x = 0; x &lt; width; x++) {</span>
+<span class="fc" id="L349">                Tile tile = grid[y][x];</span>
+<span class="fc bfc" id="L350" title="All 2 branches covered.">                if (tile.hasContent()) {</span>
+                    // Draw objects that should appear on top (Ball, Hole, Spawner)
+<span class="fc bfc" id="L352" title="All 2 branches covered.">                    if (!(tile.getContent() instanceof TileWithImage)) {</span>
+<span class="fc" id="L353">                        tile.getContent().draw(app, x, y);</span>
+                    }
+                }
+            }
+        }
+<span class="fc" id="L358">    }</span>
+    
+       
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

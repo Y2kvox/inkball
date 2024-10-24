@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Line.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">inkball_scaffold</a> &gt; <a href="index.source.html" class="el_package">inkball</a> &gt; <span class="el_source">Line.java</span></div><h1>Line.java</h1><pre class="source lang-java linenums">package inkball;
+
+import processing.core.PApplet;
+import processing.core.PVector;
+
+class Line {
+    PVector start;
+    PVector end;
+    boolean hit;
+
+<span class="nc" id="L11">    Line(PVector start, PVector end) {</span>
+<span class="nc" id="L12">        this.start = start;</span>
+<span class="nc" id="L13">        this.end = end;</span>
+<span class="nc" id="L14">    }</span>
+
+    // Method to calculate the distance from a ball to the line segment
+    public float distanceToBall(float ballX, float ballY) {
+<span class="nc" id="L18">        PVector ballPos = new PVector(ballX, ballY);</span>
+<span class="nc" id="L19">        PVector lineDir = PVector.sub(end, start);</span>
+<span class="nc" id="L20">        float k = PVector.sub(ballPos, start).dot(lineDir) / lineDir.magSq();</span>
+<span class="nc" id="L21">        k = constrain(k, 0, 1);  // Ensure t is within [0, 1] to stay within the line segment</span>
+<span class="nc" id="L22">        PVector closestPoint = PVector.add(start, PVector.mult(lineDir, k));</span>
+<span class="nc" id="L23">        return PVector.dist(ballPos, closestPoint);  // Return the distance from the ball to the closest point on the line</span>
+    }
+
+    // Check if the ball collides with the line
+    public boolean checkCollision(Ball ball) {
+<span class="nc" id="L28">        float ballRadius = ball.getRadius();</span>
+<span class="nc" id="L29">        float distance = distanceToBall(ball.position.x, ball.position.y);  // Calculate the distance to the ball</span>
+<span class="nc bnc" id="L30" title="All 2 branches missed.">        return distance &lt;= ballRadius;  // A collision occurs if the ball's radius intersects with the line</span>
+    }
+
+    // Calculate the new velocity of the ball after a collision with the line
+    public PVector calculateNewVelocity(Ball ball) {
+<span class="nc" id="L35">        PVector ballVelocity = new PVector((float) ball.velocity.x, (float) ball.velocity.y);</span>
+
+        // Calculate the normal of the line segment
+<span class="nc" id="L38">        PVector segment = PVector.sub(end, start);</span>
+<span class="nc" id="L39">        PVector normal = new PVector(-segment.y, segment.x).normalize();  // Normal vector for reflection</span>
+
+        // Calculate reflection using the formula: v' = v - 2 * (v â‹… n) * n
+<span class="nc" id="L42">        float dotProduct = PVector.dot(ballVelocity, normal);</span>
+<span class="nc" id="L43">        PVector newVelocity = PVector.sub(ballVelocity, PVector.mult(normal, 2 * dotProduct));</span>
+
+<span class="nc" id="L45">        return newVelocity;</span>
+    }
+
+    // Utility method to constrain a value within a range (0, 1)
+    private float constrain(float value, float min, float max) {
+<span class="nc" id="L50">        return Math.max(min, Math.min(value, max));</span>
+    }
+
+    public void draw(PApplet applet) {
+<span class="nc" id="L54">        applet.line(this.start.x, this.start.y, this.end.x, this.end.y);</span>
+<span class="nc" id="L55">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
