@@ -13,13 +13,14 @@ public class Ball{
     static String level;
     float plusMod;
     float minusMod;
-    boolean hit, checked;
+    boolean hit, checked,rightHole,isOut;
     boolean notSet = true, once = true;
     float size;  // Current size of the ball
     static final float SHRINK_RATE = 1.0f;  // Amount to shrink each frame
     float radius = 16;
 
     public Ball(int colorIndex, int startX, int startY) {
+        this.rightHole = true;
         this.colorIndex = colorIndex;
         setSpriteAndScores(colorIndex);
         changeMods();
@@ -224,7 +225,7 @@ public class Ball{
 
     public void draw(App app, int x, int y) {
         if (sprite != null) {
-            app.image(sprite, x,y, size, size);
+            app.image(sprite, x,y, 25,25);
         } else {
             App.println("Ball not loading properly");
         }

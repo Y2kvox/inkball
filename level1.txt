@@ -1,6 +1,6 @@
 XXXXXXX2222XXXXXXX
 X              H0X
-X                X
+X      b         X
 X                X
 X                X
 X                X
@@ -13,6 +13,6 @@ X                X
 X                X
 X     B2         X
 X                X
-X              H0X
+X      o       H0X
 X                X
 XXXXXXX1111XXXXXXX

@@ -30,19 +30,21 @@ public class App extends PApplet {
 
     public static final int INITIAL_PARACHUTES = 1;
 
-    public static final int FPS = 30;
+    public static final int FPS = 300;
 
     public String configPath;
     //sprites
     public static PImage[] wallsprite;
     public static PImage[] ballsprite;
     public static PImage[] holesprite;
+    public static PImage[] bricksprite;
     public static PImage spawnsprite;
     public static PImage tilesprite;
 
     Board board; // Add board instance
     ArrayList<int[]> balls;
-    ArrayList<Ball> currentBalls;
+    LinkedList<Ball> currentBalls;
+    LinkedList<Ball> duplicateBalls;
 
     //time
     private int timerDuration;
@@ -60,7 +62,6 @@ public class App extends PApplet {
     int ballReleaseInterval;
     long lastBallReleaseTime;
     int ballsReleased;
-    int count = 0;
 
     //pause
     boolean paused;
@@ -68,6 +69,7 @@ public class App extends PApplet {
     //score
     int score = 0, currentLevelIndex = 0;
     boolean tr, one, nPressed;
+    int count;
 
 
 
@@ -94,10 +96,12 @@ public class App extends PApplet {
         timeRemaining = timerDuration -1; // countdown
         timerRunning = true;
         lastMillis = millis();
+        this.count = 0;
 
         //set-reset balls
         board.addBalls();
         currentBalls = board.getBalls();
+        duplicateBalls = board.getBalls();
         ballReleaseInterval = board.getInterval();
         
 
@@ -172,6 +176,7 @@ public class App extends PApplet {
         // When the mouse is released, add the entire drawn line to allLines and clear drawnLines
         if (!drawnLines.isEmpty()) {
             allLines.add(new ArrayList<>(drawnLines)); // Add the entire line
+            drawnLines.clear();
         }
     }
 
@@ -180,7 +185,7 @@ public class App extends PApplet {
     
     @SuppressWarnings("rawtypes")
     public void ballCheck() {
-        score = 0;  // Reset score for this check
+        //score = 0;  // Reset score for this check
         long currentTime = System.currentTimeMillis();
     
         // Release a new ball every [interval] seconds, if not paused
@@ -188,10 +193,19 @@ public class App extends PApplet {
             lastBallReleaseTime = currentTime;
             ballsReleased++; // Increase the count of released balls
         }
+        int j = 0;
+        for(Ball b : duplicateBalls){
+            if(b.rightHole && !b.isOut){
+                b.draw(this, 32*j, TOPBAR/2);
+            }
+            j++;
+            
+        }
     
         // Iterate only over released balls
         for (int i = 0; i < ballsReleased; i++) {
             Ball ball = currentBalls.get(i);
+            duplicateBalls.get(i).isOut = true;
             stroke(255,0,0);
             strokeWeight(5);
             ball.draw(this);  // Draw the ball
@@ -199,7 +213,6 @@ public class App extends PApplet {
             // Update ball movement and check for collisions if the game is not paused
             if (!paused && timerRunning) {
                 ball.move();
-                score += ball.getScore();  // Update total score
             }
     
             // Check for collisions with walls
@@ -224,18 +237,34 @@ public class App extends PApplet {
                             ball.scorePlus();
                             ball.hit = !ball.hit;
                         }else if (!ball.hit){
+                            ball.isOut = false;
+                            ball.rightHole = true;
+                            
                             ball.scoreMinus();
                             ball.hit = !ball.hit;
                         }
+                        score = 0;// reset score and calculate again with the ballt o avoid overlapping
+                        score += ball.getScore();  // Update total score
                         
                         break;  // Exit the loop if the ball has interacted with a hole
                     }
                 }
             }
-            checkLevelEnd();
+
+            // for(Brick brick : board.bricks){
+            //     if(brick.checkBrickCollision(ball)){
+            //         if(brick.checkBallType(ball)){
+            //             brick.decreaseStrength();
+            //             if(brick.isDestroyed()){
+            //                 brick.replaceWithTileWithImage(board);
+            //             }
+            //         }
+            //     }
+            // }
+
+            checkLevelEnd(); // check level-end condition since the line check will be useless after this point
 
             // Check for collisions between the ball and the full lines
-
             Iterator<ArrayList<Line>> lineIterator = allLines.iterator();
             while (lineIterator.hasNext()) {
                 ArrayList<Line> fullLine = lineIterator.next();
@@ -255,18 +284,20 @@ public class App extends PApplet {
                     lineIterator.remove(); // Remove the entire line if hit
                 }
             }
+
+            
             
         }
         
     }
-    
+
     
 
 
 	@Override
     public void draw() {
         background(225);
-        rect(0, 32, CELLSIZE * currentBalls.size(), 32);
+        rect(0, 32, CELLSIZE * 5, 32);
         board.draw(this);
         
         // Check if time has run out
@@ -276,8 +307,6 @@ public class App extends PApplet {
             gameOver(); // Display game over message
 
             // Move to the next level
-            goToNextlevel();
-            setup(); // Reset the game state for the new level
             return; // Exit the draw method to prevent further drawing in this frame
         }
 
@@ -309,8 +338,13 @@ public class App extends PApplet {
         // // Draw the lines
         stroke(0);
         strokeWeight(10);
-        for (Line line : drawnLines) {
-            line.draw(this);
+        for (ArrayList<Line> line : allLines) {
+            for(Line l :line ){
+                l.draw(this);
+            }
+        }
+        for(Line l : drawnLines){
+            l.draw(this);
         }
         
     }
@@ -335,7 +369,6 @@ public class App extends PApplet {
     
             // Call the next level method
             goToNextlevel();
-            setup();
         }
     }
     
@@ -346,6 +379,7 @@ public class App extends PApplet {
         wallsprite = new PImage[5];
         ballsprite = new PImage[5];
         holesprite = new PImage[5];
+        bricksprite = new PImage[5];
 
         //sapwner
         spawnsprite = loadImage("src/main/resources/inkball/entrypoint.png");
@@ -382,6 +416,16 @@ public class App extends PApplet {
         for (int i = 0; i < 5; i++) {
             ballsprite[i] = loadImage("src/main/resources/inkball/ball" + i + ".png");
         }
+
+        //bricks
+        for (int i = 0; i < bricksprite.length; i++) {
+            bricksprite[i] = loadImage("src/main/resources/inkball/brick" + i + ".png");
+            if (bricksprite[i] == null) {
+                println("Error: brick" + i + ".png could not be loaded.");
+            } else {
+                println("brick" + i + ".png loaded successfully.");
+            }
+        }
     }
 
 
@@ -389,10 +433,14 @@ public class App extends PApplet {
 
     public void resetGame() {
         currentLevelIndex = 0;
-        setup();
+        count = 0;
         score = 0;
         drawnLines.clear();
         allLines.clear();
+        duplicateBalls.clear();
+        currentBalls.clear();
+        setup();
+        
 
     }
 
@@ -402,8 +450,14 @@ public class App extends PApplet {
         }else{
         currentLevelIndex++;
         }
+        count = 0;
         allLines.clear();
         drawnLines.clear();
+        duplicateBalls.clear();
+        System.out.println(score);
+        setup();
+        //currentBalls.clear();
+        
     }
 
     public void gameOver(){

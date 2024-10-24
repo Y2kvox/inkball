@@ -80,7 +80,6 @@ public class Hole implements TileContent {
     public boolean checkCollision(Ball ball) {
         for (PVector pixel : pixelPositions) {
             if (PVector.dist(new PVector(ball.position.x, ball.position.y), pixel) < 1) {
-                ball.hit = true; // Set the hit flag to true
                 s += 1;
                 return true; // Collision detectedz
             }

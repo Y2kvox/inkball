@@ -6,6 +6,7 @@ import processing.core.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -21,10 +22,12 @@ public class Board {
     int col,s;
     int currentLevelIndex; // Track the current level index
     List<Map<String, Object>> levels;
-    ArrayList<Ball> balls;
+    //ArrayList<Ball> balls;
+    LinkedList<Ball> balls;
     List<Spawner> spawners;
     List<int[]> xy;
     List<Hole> holes = new ArrayList<>();
+    List<Brick> bricks = new ArrayList<>();
     
     
 
@@ -39,7 +42,7 @@ public class Board {
                 grid[i][j] = new Tile(); // Ensure each tile is initialized
             }
         }
-        this.balls = new ArrayList<>(); // Initialize the balls list
+        this.balls = new LinkedList<>();
         this.spawners = new ArrayList<>(); // Initialize the spawners list
         xy = new ArrayList<>();
         this.s = 0;
@@ -72,8 +75,16 @@ public class Board {
         holes.add(h);
     }
 
+    public void addBrick(Brick b){
+        bricks.add(b);
+    }
+
     public List<Hole> getHoleList(){
         return holes;
+    }
+
+    public List<Brick> getBrickList(){
+        return bricks;
     }
 
     
@@ -149,6 +160,27 @@ public class Board {
                         case '4':
                             placeWall(x, y, 4);
                             break;
+                        case 'o':
+                            placeItem(x, y, new Brick(1));
+                            addBrick(new Brick(1));
+                            break;
+                        case 'b':
+                            placeItem(x, y, new Brick(2));
+                            addBrick(new Brick(2));
+                            break;
+                        case 'g':
+                            placeItem(x, y, new Brick(3));
+                            addBrick(new Brick(3));
+                            break;
+                        case 'y':
+                            placeItem(x, y, new Brick(4));
+                            addBrick(new Brick(4));
+                            break;
+                        case 'w':
+                            placeItem(x, y, new Brick(0));
+                            addBrick(new Brick(0));
+                            break;
+                        
 
                             //spawner
                         case 'S':
@@ -319,7 +351,7 @@ public class Board {
     return colorMap.get(str);
     }
     
-    public ArrayList<Ball> getBalls() {
+    public LinkedList<Ball> getBalls() {
         return balls;
     }
 
