@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Spawner.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">inkball_scaffold</a> &gt; <a href="index.source.html" class="el_package">inkball</a> &gt; <span class="el_source">Spawner.java</span></div><h1>Spawner.java</h1><pre class="source lang-java linenums">package inkball;
+
+import java.util.List;
+import java.util.ArrayList;
+
+import processing.core.PImage;
+
+public class Spawner implements TileContent {
+    PImage sprite;
+<span class="fc" id="L10">    List&lt;int[]&gt; coords = new ArrayList&lt;&gt;();</span>
+    int x,y;
+
+<span class="fc" id="L13">    public Spawner(){</span>
+<span class="fc" id="L14">        this.sprite = App.spawnsprite;</span>
+<span class="fc" id="L15">    }</span>
+
+
+    public void addCoords(int x, int y) {
+<span class="fc" id="L19">        coords.add(new int[] {x, y});</span>
+<span class="fc" id="L20">    }</span>
+
+    //coords = [[x1,y1], [x2,y2],...[xN,yN]]
+    public List&lt;int[]&gt; getCoords() {
+<span class="fc" id="L24">        return coords;</span>
+    }
+    
+    @Override
+    public String toString() {
+<span class="nc" id="L29">        return &quot;spawner&quot;;</span>
+    }
+
+    @Override
+    public void draw(App app, int x, int y){
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">        if (sprite != null){</span>
+<span class="fc" id="L35">            float drawX = x * App.CELLSIZE;</span>
+<span class="fc" id="L36">            float drawY = y * App.CELLSIZE + App.TOPBAR;</span>
+<span class="fc" id="L37">            app.image(sprite, drawX, drawY);</span>
+<span class="fc" id="L38">        }else{</span>
+<span class="nc" id="L39">            App.println(&quot;Spawner not laoding properly&quot;);</span>
+        }
+<span class="fc" id="L41">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

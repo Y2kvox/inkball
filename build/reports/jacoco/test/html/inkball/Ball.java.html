@@ -1,0 +1,359 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Ball.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">inkball_scaffold</a> &gt; <a href="index.source.html" class="el_package">inkball</a> &gt; <span class="el_source">Ball.java</span></div><h1>Ball.java</h1><pre class="source lang-java linenums">package inkball;
+
+import processing.core.PImage;
+import processing.core.PVector;
+
+public class Ball{
+    PImage sprite;
+    int colorIndex;
+    PVector velocity;  // Vector for velocity
+    PVector position;  // Vector for position
+    int scoreIncrease, scoreDecrease;
+<span class="fc" id="L12">    int ballScore = 0;</span>
+    static String level;
+    float plusMod;
+    float minusMod;
+    boolean hit, checked,rightHole,isOut;
+<span class="fc" id="L17">    boolean notSet = true, once = true;</span>
+    float size;  // Current size of the ball
+    static final float SHRINK_RATE = 1.0f;  // Amount to shrink each frame
+<span class="fc" id="L20">    float radius = 16;</span>
+<span class="fc" id="L21">    Brick lastCollidedBrick = null;</span>
+
+    /**
+     * Constructs a Ball with the specified color index and starting position.
+     * 
+     * @param colorIndex the color index of the ball.
+     * @param startX the starting x-coordinate of the ball.
+     * @param startY the starting y-coordinate of the ball.
+     */
+<span class="fc" id="L30">    public Ball(int colorIndex, int startX, int startY) {</span>
+<span class="fc" id="L31">        this.rightHole = true;</span>
+<span class="fc" id="L32">        this.colorIndex = colorIndex;</span>
+<span class="fc" id="L33">        setSpriteAndScores(colorIndex);</span>
+<span class="fc" id="L34">        changeMods();</span>
+        
+
+<span class="fc" id="L37">        this.size = 25;</span>
+
+        // Initialize ball position using PVector
+<span class="fc" id="L40">        this.position = new PVector(startX * App.CELLSIZE, startY * App.CELLSIZE + App.TOPBAR);</span>
+
+        // Initialize random velocity vector, either -2 or 2 for both x and y
+<span class="fc bfc" id="L43" title="All 4 branches covered.">        this.velocity = new PVector((Math.random() &lt; 0.5) ? -2 : 2, (Math.random() &lt; 0.5) ? -2 : 2);</span>
+
+        //System.out.println(&quot;Ball &quot; + this.colorIndex + &quot; score = &quot; + this.scoreIncrease);
+<span class="fc" id="L46">    }</span>
+
+    /**
+     * Sets the sprite and scores based on the ball's color index.
+     * 
+     * @param colorIndex the color index of the ball.
+     */
+    public void setSpriteAndScores(int colorIndex) {
+<span class="pc bpc" id="L54" title="2 of 4 branches missed.">        if (colorIndex &gt;= 0 &amp;&amp; colorIndex &lt; App.ballsprite.length) {</span>
+<span class="fc" id="L55">            this.sprite = App.ballsprite[colorIndex];</span>
+        } else {
+<span class="nc" id="L57">            System.out.println(&quot;Invalid ball: &quot; + colorIndex);</span>
+        }
+
+        // Update scores based on the ball color
+<span class="pc bpc" id="L61" title="1 of 4 branches missed.">        switch (this.colorIndex) {</span>
+            case 0:
+<span class="fc" id="L63">                this.scoreIncrease = 70;</span>
+<span class="fc" id="L64">                this.scoreDecrease = 0;</span>
+<span class="fc" id="L65">                break;</span>
+            case 1:
+            case 2:
+            case 3:
+<span class="fc" id="L69">                this.scoreIncrease = 50;</span>
+<span class="fc" id="L70">                this.scoreDecrease = 25;</span>
+<span class="fc" id="L71">                break;</span>
+            case 4:
+<span class="fc" id="L73">                this.scoreIncrease = 100;</span>
+<span class="fc" id="L74">                this.scoreDecrease = 100;</span>
+                break;
+        }
+<span class="fc" id="L77">    }</span>
+    
+    // Update position by adding velocity to it
+    public void move() {
+
+<span class="fc" id="L82">        position.add(velocity);</span>
+<span class="fc" id="L83">    }</span>
+
+    
+
+    /**
+     * Handles the collision of the ball with a wall.
+     * This method checks if the ball collides with the given wall and adjusts the ball's position and velocity accordingly.
+     * 
+     * @param wall the wall to check for collision.
+     */
+    public void handleCollision(Wall wall) {
+        // Calculate ball's edges
+<span class="fc" id="L95">        float ballLeft = this.position.x - this.radius;</span>
+<span class="fc" id="L96">        float ballRight = this.position.x + this.radius;</span>
+<span class="fc" id="L97">        float ballTop = this.position.y - this.radius;</span>
+<span class="fc" id="L98">        float ballBottom = this.position.y + this.radius;</span>
+
+        // Calculate wall's edges
+<span class="fc" id="L101">        float wallLeft = wall.position.x;</span>
+<span class="fc" id="L102">        float wallRight = wall.position.x + wall.size/2; // Assuming wall.size gives the width/height</span>
+<span class="fc" id="L103">        float wallTop = wall.position.y;</span>
+<span class="fc" id="L104">        float wallBottom = wall.position.y + wall.size;</span>
+
+        // Check for collision
+<span class="pc bpc" id="L107" title="1 of 8 branches missed.">        if (ballRight &gt; wallLeft &amp;&amp; ballLeft &lt; wallRight &amp;&amp; ballBottom &gt; wallTop &amp;&amp; ballTop &lt; wallBottom) {</span>
+            // Find the overlap on each side
+<span class="nc" id="L109">            float overlapLeft = ballRight - wallLeft;</span>
+<span class="nc" id="L110">            float overlapRight = wallRight - ballLeft;</span>
+<span class="nc" id="L111">            float overlapTop = ballBottom - wallTop;</span>
+<span class="nc" id="L112">            float overlapBottom = wallBottom - ballTop;</span>
+
+            // Determine the smallest overlap
+<span class="nc" id="L115">            float minOverlap = Math.min(Math.min(overlapLeft, overlapRight), Math.min(overlapTop, overlapBottom));</span>
+
+            // Change direction based on the side of collision
+<span class="nc bnc" id="L118" title="All 2 branches missed.">            if (minOverlap == overlapLeft) {</span>
+                // Collision from the left side
+<span class="nc" id="L120">                this.velocity.x *= -1;  // Reverse X direction</span>
+<span class="nc" id="L121">                this.position.x = wallLeft - this.radius; // Move the ball outside the wall</span>
+<span class="nc bnc" id="L122" title="All 2 branches missed.">            } else if (minOverlap == overlapRight) {</span>
+                // Collision from the right side
+<span class="nc" id="L124">                this.velocity.x *= -1;  // Reverse X direction</span>
+<span class="nc" id="L125">                this.position.x = wallRight + this.radius; // Move the ball outside the wall</span>
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            } else if (minOverlap == overlapTop) {</span>
+                // Collision from the top side
+<span class="nc" id="L128">                this.velocity.y *= -1;  // Reverse Y direction</span>
+<span class="nc" id="L129">                this.position.y = wallTop - this.radius; // Move the ball outside the wall</span>
+<span class="nc bnc" id="L130" title="All 2 branches missed.">            } else if (minOverlap == overlapBottom) {</span>
+                // Collision from the bottom side
+<span class="nc" id="L132">                this.velocity.y *= -1;  // Reverse Y direction</span>
+<span class="nc" id="L133">                this.position.y = wallBottom + this.radius; // Move the ball outside the wall</span>
+            }
+<span class="nc" id="L135">            updateBallTypeIfNeeded(wall);  // Update ball type if needed</span>
+        }
+<span class="fc" id="L137">    }</span>
+
+    /**
+     * Handles the collision of the ball with a brick if it is enabled. Otherwise passes through the brick.
+     * This method checks if the ball collides with the given brick and adjusts the ball's position and velocity accordingly.
+     * It also decreases the strength of the brick if a collision occurs.
+     * 
+     * @param brick the brick to check for collision.
+     */
+    public void handleBrickCollision(Brick brick) {
+<span class="pc bpc" id="L147" title="1 of 2 branches missed.">        if(!brick.enabled){</span>
+<span class="nc" id="L148">            return;</span>
+        }
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if (brick.checkBrickCollision(this)) {</span>
+            // Only decrease strength if the ball is colliding with a new brick
+<span class="nc bnc" id="L152" title="All 2 branches missed.">            if (lastCollidedBrick != brick) {</span>
+<span class="nc" id="L153">                brick.decreaseStrength();</span>
+<span class="nc" id="L154">                lastCollidedBrick = brick; // Set this brick as the last collided one</span>
+            }
+<span class="pc bpc" id="L156" title="1 of 2 branches missed.">        } else if (lastCollidedBrick == brick) {</span>
+            // Reset the collision when the ball is no longer touching this brick
+<span class="nc" id="L158">            lastCollidedBrick = null;</span>
+        }
+        // Calculate ball's edges
+<span class="fc" id="L161">        float ballLeft = this.position.x - this.radius;</span>
+<span class="fc" id="L162">        float ballRight = this.position.x + this.radius;</span>
+<span class="fc" id="L163">        float ballTop = this.position.y - this.radius;</span>
+<span class="fc" id="L164">        float ballBottom = this.position.y + this.radius;</span>
+
+        // Calculate  brick's edges
+<span class="fc" id="L167">        float  brickLeft =  brick.position.x;</span>
+<span class="fc" id="L168">        float  brickRight =  brick.position.x +  brick.size/2; // Assuming  brick.size gives the width/height</span>
+<span class="fc" id="L169">        float  brickTop =  brick.position.y;</span>
+<span class="fc" id="L170">        float  brickBottom =  brick.position.y +  brick.size;</span>
+
+        // Check for collision
+<span class="pc bpc" id="L173" title="1 of 8 branches missed.">        if (ballRight &gt;  brickLeft &amp;&amp; ballLeft &lt;  brickRight &amp;&amp; ballBottom &gt;  brickTop &amp;&amp; ballTop &lt;  brickBottom) {</span>
+            // Find the overlap on each side
+<span class="nc" id="L175">            float overlapLeft = ballRight -  brickLeft;</span>
+<span class="nc" id="L176">            float overlapRight =  brickRight - ballLeft;</span>
+<span class="nc" id="L177">            float overlapTop = ballBottom -  brickTop;</span>
+<span class="nc" id="L178">            float overlapBottom =  brickBottom - ballTop;</span>
+
+            // Determine the smallest overlap
+<span class="nc" id="L181">            float minOverlap = Math.min(Math.min(overlapLeft, overlapRight), Math.min(overlapTop, overlapBottom));</span>
+
+            // Change direction based on the side of collision
+<span class="nc bnc" id="L184" title="All 2 branches missed.">            if (minOverlap == overlapLeft) {</span>
+                // Collision from the left side
+<span class="nc" id="L186">                this.velocity.x *= -1;  // Reverse X direction</span>
+<span class="nc" id="L187">                this.position.x =  brickLeft - this.radius; // Move the ball outside the  brick</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">            } else if (minOverlap == overlapRight) {</span>
+                // Collision from the right side
+<span class="nc" id="L190">                this.velocity.x *= -1;  // Reverse X direction</span>
+<span class="nc" id="L191">                this.position.x =  brickRight + this.radius; // Move the ball outside the  brick</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">            } else if (minOverlap == overlapTop) {</span>
+                // Collision from the top side
+<span class="nc" id="L194">                this.velocity.y *= -1;  // Reverse Y direction</span>
+<span class="nc" id="L195">                this.position.y =  brickTop - this.radius; // Move the ball outside the  brick</span>
+<span class="nc bnc" id="L196" title="All 2 branches missed.">            } else if (minOverlap == overlapBottom) {</span>
+                // Collision from the bottom side
+<span class="nc" id="L198">                this.velocity.y *= -1;  // Reverse Y direction</span>
+<span class="nc" id="L199">                this.position.y =  brickBottom + this.radius; // Move the ball outside the  brick</span>
+            }
+        }
+<span class="fc" id="L202">    }</span>
+
+    /**
+     * Updates the ball's type if it collides with a wall of a different type.
+     * If the wall's type is not 0 and is different from the ball's current color index,
+     * the ball's color index is updated to match the wall's type, and the sprite and scores are updated accordingly.
+     * 
+     * @param wall the wall to check for type update.
+     */
+    private void updateBallTypeIfNeeded(Wall wall) {
+<span class="nc bnc" id="L212" title="All 4 branches missed.">        if (wall.getWallType() != 0 &amp;&amp; wall.getWallType() != this.colorIndex) {</span>
+<span class="nc" id="L213">            this.colorIndex = wall.getWallType();</span>
+<span class="nc" id="L214">            setSpriteAndScores(this.colorIndex);  // Update sprite and scores based on new color</span>
+            //System.err.println(&quot;Ball type &quot; + this.colorIndex + &quot; placed&quot;);
+        }
+<span class="nc" id="L217">    }</span>
+
+    /**
+     * Returns the radius of the ball.
+     * 
+     * @return the radius of the ball.
+     */
+    public float getRadius() {
+<span class="nc" id="L225">        return radius;</span>
+    }
+
+    /**
+     * Returns the modified score added when the ball hits a target.
+     * If the ball has not hit a target and the score has not been set, the score is increased.
+     * 
+     * @return the modified score added, or 0 if the ball has already hit a target or the score has been set.
+     */
+    public float scorePlus() {
+<span class="nc bnc" id="L235" title="All 4 branches missed.">        if (!hit &amp;&amp; notSet) {</span>
+<span class="nc" id="L236">            ballScore += increaseScore();</span>
+<span class="nc" id="L237">            return ballScore;</span>
+        }
+<span class="nc" id="L239">        return 0;</span>
+    }
+
+    /**
+     * Returns the modified score subtracted when the ball misses a target.
+     * If the ball has not hit a target and the score has not been set, the score is decreased.
+     * 
+     * @return the modified score subtracted, or 0 if the ball has already hit a target or the score has been set.
+     */
+    public float scoreMinus() {
+<span class="nc bnc" id="L249" title="All 4 branches missed.">        if (!hit &amp;&amp; notSet) {</span>
+<span class="nc" id="L250">            ballScore -= decreaseScore();</span>
+<span class="nc" id="L251">            return ballScore;</span>
+        }
+<span class="nc" id="L253">        return 0;</span>
+    }
+
+    /**
+     * Returns the current score of the ball.
+     * 
+     * @return the current score of the ball.
+     */
+    public float getScore() {
+<span class="nc" id="L262">        return this.ballScore;</span>
+    }
+
+    /**
+     * Increases the score based on the ball's score increase value and a modifier.
+     * 
+     * @return the increased score.
+     */
+    public float increaseScore() {
+<span class="nc" id="L271">        return this.scoreIncrease * plusMod;</span>
+    }
+
+    /**
+     * Decreases the score based on the ball's score decrease value and a modifier.
+     * 
+     * @return the decreased score.
+     */
+    public float decreaseScore() {
+<span class="nc" id="L280">        return this.scoreDecrease * minusMod;</span>
+    }
+
+    /**
+     * Sets the current level of the game.
+     * 
+     * @param str the level to set.
+     */
+    public static void setLevel(String str) {
+<span class="fc" id="L289">        level = str;</span>
+<span class="fc" id="L290">    }</span>
+
+    public void changeMods() {
+<span class="pc bpc" id="L293" title="3 of 4 branches missed.">        switch (level) {</span>
+            case &quot;level1.txt&quot;:
+<span class="fc" id="L295">                plusMod = 1f;</span>
+<span class="fc" id="L296">                minusMod = 1f;</span>
+<span class="fc" id="L297">                break;</span>
+            case &quot;level2.txt&quot;:
+<span class="nc" id="L299">                plusMod = 1.2f;</span>
+<span class="nc" id="L300">                minusMod = 1.2f;</span>
+<span class="nc" id="L301">                break;</span>
+            case &quot;level3.txt&quot;:
+<span class="nc" id="L303">                plusMod = 1.3f;</span>
+<span class="nc" id="L304">                minusMod = 1.3f;</span>
+<span class="nc" id="L305">                break;</span>
+            default:
+                break;
+        }
+<span class="fc" id="L309">    }</span>
+
+    /*
+     * Shrinks the ball towards the center of the hole.
+     * @param holeCenter the center of the hole to shrink towards.
+     */
+    public void shrink(PVector holeCenter) {
+<span class="nc bnc" id="L316" title="All 2 branches missed.">        if (size &gt; 0) {</span>
+            // Calculate the direction towards the center of the hole
+<span class="nc" id="L318">            PVector directionToCenter = PVector.sub(holeCenter, position);</span>
+            
+            // Move the object towards the center by a fraction proportional to the shrinking rate
+<span class="nc" id="L321">            position.add(directionToCenter.mult(SHRINK_RATE / size));</span>
+            
+            // Decrease the size
+<span class="nc" id="L324">            size -= SHRINK_RATE;</span>
+            
+            
+<span class="nc bnc" id="L327" title="All 2 branches missed.">            if (size &lt; 0) {</span>
+<span class="nc" id="L328">                size = 0;  // Ensure size doesn't go negative</span>
+            }
+        }
+<span class="nc" id="L331">    }</span>
+    
+
+    public float getSize() {
+<span class="fc" id="L335">        return size;  // Method to return current size</span>
+    }
+
+    @Override
+    public String toString() {
+<span class="nc" id="L340">        return &quot;ball&quot;;</span>
+    }
+
+    public void draw(App app) {
+<span class="pc bpc" id="L344" title="1 of 2 branches missed.">        if (sprite != null) {</span>
+<span class="fc" id="L345">            app.image(sprite, position.x, position.y, size, size);</span>
+        } else {
+<span class="nc" id="L347">            App.println(&quot;Ball not loading properly&quot;);</span>
+        }
+<span class="fc" id="L349">    }</span>
+
+    public void draw(App app, int x, int y) {
+<span class="pc bpc" id="L352" title="1 of 2 branches missed.">        if (sprite != null) {</span>
+<span class="fc" id="L353">            app.image(sprite, x,y, 25,25);</span>
+        } else {
+<span class="nc" id="L355">            App.println(&quot;Ball not loading properly&quot;);</span>
+        }
+<span class="fc" id="L357">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
